@@ -4,8 +4,9 @@ import 'package:global_configuration/global_configuration.dart';
 import 'generated/l10n.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'src/backend/api.dart';
 import 'src/helpers/helper.dart';
-import 'src/model/scope_model_wrapper.dart';
+import 'src/models/scope_model_wrapper.dart';
 import 'src/screens/home_page.dart';
 
 void main() async {

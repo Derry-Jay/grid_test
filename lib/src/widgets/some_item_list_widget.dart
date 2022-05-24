@@ -1,17 +1,21 @@
-import 'package:grid_test/src/widgets/some_item_widget.dart';
-
 import '../backend/api.dart';
-import '../model/some_item.dart';
+import 'some_item_widget.dart';
+import '../models/some_item.dart';
+import '../screens/first_page.dart';
 import 'package:flutter/material.dart';
 
 class SomeItemListWidget extends StatefulWidget {
   const SomeItemListWidget({Key? key}) : super(key: key);
 
   @override
-  State<SomeItemListWidget> createState() => _SomeItemListWidgetState();
+  SomeItemListWidgetState createState() => SomeItemListWidgetState();
+
+  static FirstPageState? of(BuildContext context) =>
+      context.findAncestorStateOfType<FirstPageState>();
 }
 
-class _SomeItemListWidgetState extends State<SomeItemListWidget> {
+class SomeItemListWidgetState extends State<SomeItemListWidget> {
+  FirstPageState? get fps => SomeItemListWidget.of(context);
   Widget listBuilder(
       BuildContext context, AsyncSnapshot<List<SomeItem>> items) {
     Widget getItem(BuildContext context, int index) {

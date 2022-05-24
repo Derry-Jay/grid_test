@@ -1,5 +1,6 @@
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
+import '../widgets/some_item_list_widget.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({Key? key}) : super(key: key);
@@ -14,45 +15,45 @@ class FirstPageState extends State<FirstPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Stack(children: [
-          Container(
-              width: 100,
-              height: 70,
-              alignment: Alignment.center,
-              margin: const EdgeInsets.only(left: 60),
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    bottomRight: Radius.circular(20),
-                    bottomLeft: Radius.circular(20),
-                  ),
-                  border: Border.all(
-                    width: 1,
-                    color: Colors.blueGrey,
-                    style: BorderStyle.solid,
-                  ),
-                  color: Colors.white),
-              child: Image.asset(
-                'assets/images/logo.jpg',
-                fit: BoxFit.scaleDown,
-                height: 32,
-              ))
-          // ,TextFormField(
-          //     controller: con.nc,
-          //     validator: hp.nameValidator,
-          //     decoration: InputDecoration(
-          //         contentPadding: EdgeInsets.symmetric(
-          //             vertical: hp.height / 100, horizontal: hp.width / 40),
-          //         border: const OutlineInputBorder(),
-          //         hintText: hp.loc.full_name)),
-          // TextFormField(
-          //     controller: con.dc,
-          //     validator: hp.descriptionValidator,
-          //     decoration: InputDecoration(
-          //         contentPadding: EdgeInsets.symmetric(
-          //             vertical: hp.height / 100, horizontal: hp.width / 40),
-          //         border: const OutlineInputBorder(),
-          //         hintText: hp.loc.description))
-        ]),
+        // title: Stack(children: [
+        //   Container(
+        //       width: 100,
+        //       height: 70,
+        //       alignment: Alignment.center,
+        //       margin: const EdgeInsets.only(left: 60),
+        //       decoration: BoxDecoration(
+        //           borderRadius: const BorderRadius.only(
+        //             bottomRight: Radius.circular(20),
+        //             bottomLeft: Radius.circular(20),
+        //           ),
+        //           border: Border.all(
+        //             width: 1,
+        //             color: Colors.blueGrey,
+        //             style: BorderStyle.solid,
+        //           ),
+        //           color: Colors.white),
+        //       child: Image.asset(
+        //         'assets/images/logo.jpg',
+        //         fit: BoxFit.scaleDown,
+        //         height: 32,
+        //       ))
+        //   // ,TextFormField(
+        //   //     controller: con.nc,
+        //   //     validator: hp.nameValidator,
+        //   //     decoration: InputDecoration(
+        //   //         contentPadding: EdgeInsets.symmetric(
+        //   //             vertical: hp.height / 100, horizontal: hp.width / 40),
+        //   //         border: const OutlineInputBorder(),
+        //   //         hintText: hp.loc.full_name)),
+        //   // TextFormField(
+        //   //     controller: con.dc,
+        //   //     validator: hp.descriptionValidator,
+        //   //     decoration: InputDecoration(
+        //   //         contentPadding: EdgeInsets.symmetric(
+        //   //             vertical: hp.height / 100, horizontal: hp.width / 40),
+        //   //         border: const OutlineInputBorder(),
+        //   //         hintText: hp.loc.description))
+        // ]),
         // title: Image.asset('assets/images/logo.jpg',
         //     fit: BoxFit.fill, height: hp.height / 20),
         actions: [
@@ -82,9 +83,7 @@ class FirstPageState extends State<FirstPage> {
           child: Center(
         child: Column(
           children: <Widget>[
-            const SizedBox(
-              height: 50,
-            ),
+            const SizedBox(height: 50, child: SomeItemListWidget()),
             SizedBox(
               width: 225.0 + 225.0 + 225.0 + 3.0,
               height: 60.0,
@@ -130,8 +129,7 @@ class FirstPageState extends State<FirstPage> {
           ],
         ),
       )),
-      bottomNavigationBar:
-          SizedBox(width: MediaQuery.of(context).size.width, height: 50),
+      bottomNavigationBar: SizedBox(width: hp.width, height: 50),
     );
   }
 }

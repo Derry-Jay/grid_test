@@ -1,4 +1,4 @@
-import '../model/item.dart';
+import '../models/item.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 

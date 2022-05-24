@@ -1,5 +1,5 @@
 import 'item_widget.dart';
-import '../model/item.dart';
+import '../models/item.dart';
 import 'package:flutter/material.dart';
 
 class ItemListWidget extends StatelessWidget {
