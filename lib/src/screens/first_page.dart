@@ -1,0 +1,137 @@
+import '../helpers/helper.dart';
+import 'package:flutter/material.dart';
+
+class FirstPage extends StatefulWidget {
+  const FirstPage({Key? key}) : super(key: key);
+
+  @override
+  FirstPageState createState() => FirstPageState();
+}
+
+class FirstPageState extends State<FirstPage> {
+  Helper get hp => Helper.of(context);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Stack(children: [
+          Container(
+              width: 100,
+              height: 70,
+              alignment: Alignment.center,
+              margin: const EdgeInsets.only(left: 60),
+              decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    bottomRight: Radius.circular(20),
+                    bottomLeft: Radius.circular(20),
+                  ),
+                  border: Border.all(
+                    width: 1,
+                    color: Colors.blueGrey,
+                    style: BorderStyle.solid,
+                  ),
+                  color: Colors.white),
+              child: Image.asset(
+                'assets/images/logo.jpg',
+                fit: BoxFit.scaleDown,
+                height: 32,
+              ))
+          // ,TextFormField(
+          //     controller: con.nc,
+          //     validator: hp.nameValidator,
+          //     decoration: InputDecoration(
+          //         contentPadding: EdgeInsets.symmetric(
+          //             vertical: hp.height / 100, horizontal: hp.width / 40),
+          //         border: const OutlineInputBorder(),
+          //         hintText: hp.loc.full_name)),
+          // TextFormField(
+          //     controller: con.dc,
+          //     validator: hp.descriptionValidator,
+          //     decoration: InputDecoration(
+          //         contentPadding: EdgeInsets.symmetric(
+          //             vertical: hp.height / 100, horizontal: hp.width / 40),
+          //         border: const OutlineInputBorder(),
+          //         hintText: hp.loc.description))
+        ]),
+        // title: Image.asset('assets/images/logo.jpg',
+        //     fit: BoxFit.fill, height: hp.height / 20),
+        actions: [
+          IconButton(
+              onPressed: hp.goBack,
+              icon: const Icon(Icons.notifications),
+              tooltip: 'notification'),
+          // IconButton(
+          //   icon: const CircleAvatar(
+          //     backgroundImage: const AssetImage('assets/imgnature.jpg'),
+          //   ),
+          //   onPressed: CallContact,
+
+          // ),
+          // IconButton(
+          //     onPressed: hp.doNothing,
+          //     icon: const Icon(Icons.chat_bubble),
+          //     tooltip: 'notification'),
+          // IconButton(
+          //     onPressed: hp.doNothing,
+          //     icon: Image.asset('assets/images/logout.png'),
+          //     tooltip: 'sfsdf'),
+        ],
+      ),
+      // drawer: const Drawer(),
+      body: SingleChildScrollView(
+          child: Center(
+        child: Column(
+          children: <Widget>[
+            const SizedBox(
+              height: 50,
+            ),
+            SizedBox(
+              width: 225.0 + 225.0 + 225.0 + 3.0,
+              height: 60.0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Container(
+                    width: 225.0,
+                    height: 60.0,
+                    color: hp.theme.dividerColor,
+                    padding: const EdgeInsets.only(
+                        top: 20, bottom: 15, left: 25, right: 20),
+                    child: Text('Delivery Date',
+                        style: TextStyle(
+                            color: hp.theme.secondaryHeaderColor,
+                            fontSize: 20)),
+                  ),
+                  Container(
+                    width: 225.0,
+                    height: 60.0,
+                    color: hp.theme.dividerColor,
+                    padding: const EdgeInsets.only(
+                        top: 20, bottom: 15, left: 25, right: 20),
+                    child: Text('Delivery ID',
+                        style: TextStyle(
+                            color: hp.theme.secondaryHeaderColor,
+                            fontSize: 20)),
+                  ),
+                  Container(
+                    width: 225.0,
+                    height: 60.0,
+                    color: hp.theme.dividerColor,
+                    padding: const EdgeInsets.only(
+                        top: 20, bottom: 15, left: 25, right: 20),
+                    child: Text('Customer',
+                        style: TextStyle(
+                            color: hp.theme.secondaryHeaderColor,
+                            fontSize: 20)),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
+      )),
+      bottomNavigationBar:
+          SizedBox(width: MediaQuery.of(context).size.width, height: 50),
+    );
+  }
+}
