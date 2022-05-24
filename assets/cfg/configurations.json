@@ -1,0 +1,5 @@
+{
+    "asset_image_path": "assets/images/",
+    "staging": "http://setinhand-staging.cyb.co.uk/api/",
+    "testing": "http://testing.setinhand.cyb.co.uk/api/"
+}
