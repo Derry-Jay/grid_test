@@ -1,44 +1,44 @@
-import 'dart:math';
+import '../models/item.dart';
+import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 
 class ItemWidget extends StatelessWidget {
-  final MediaQueryData dimensions;
-  Size get size => dimensions.size;
-  double get height => size.height;
-  double get width => size.width;
-  double get radius => sqrt(pow(width, 2) + pow(height, 2));
-  const ItemWidget({Key? key, required this.dimensions}) : super(key: key);
+  final Item item;
+  const ItemWidget({Key? key, required this.item}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    // return Card(
-    //   shape: RoundedRectangleBorder(
-    //       borderRadius: BorderRadius.all(Radius.circular(radius / 160))),
-    //   child: Padding(
-    //       padding: EdgeInsets.symmetric(
-    //           vertical: height / 40, horizontal: width / 32),
-    //       child: Column(
-    //         children: [
-    //           Padding(
-    //               padding: EdgeInsets.only(bottom: height / 50),
-    //               child: Row(children: [
-    //                 Text(item.name),
-    //                 IconButton(
-    //                     onPressed: () {},
-    //                     icon: Icon(Icons.arrow_forward_ios_sharp, size: 50))
-    //               ], mainAxisAlignment: MainAxisAlignment.spaceBetween)),
-    //           Row(
-    //             children: [
-    //               Text(item.date),
-    //               Text(item.amount),
-    //               Text(item.cate + " " + item.type)
-    //             ],
-    //             mainAxisAlignment: MainAxisAlignment.spaceAround,
-    //           )
-    //         ],
-    //         crossAxisAlignment: CrossAxisAlignment.start,
-    //       )),
-    // );
-    return const SizedBox();
+    final hp = Helper.of(context);
+    return Card(
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(hp.radius / 160))),
+      child: Padding(
+          padding: EdgeInsets.symmetric(
+              vertical: hp.height / 40, horizontal: hp.width / 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                  padding: EdgeInsets.only(bottom: hp.height / 50),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(item.name),
+                        IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.arrow_forward_ios_sharp,
+                                size: 50))
+                      ])),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text(item.date),
+                  Text(item.amount),
+                  Text('${item.cate} ${item.type}')
+                ],
+              )
+            ],
+          )),
+    );
   }
 }

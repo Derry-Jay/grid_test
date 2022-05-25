@@ -1,19 +1,18 @@
 import 'dart:async';
+import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
-import 'package:grid_test/src/helpers/helper.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class CircularLoader extends StatefulWidget {
   final Color color;
   final Duration duration;
+  final double? heightFactor, widthFactor;
   final LoaderType? loaderType;
-  final double? heightFactor, widthFactor, sizeFactor;
   const CircularLoader(
       {Key? key,
-      this.sizeFactor,
       this.loaderType,
-      this.widthFactor,
       this.heightFactor,
+      this.widthFactor,
       required this.color,
       required this.duration})
       : super(key: key);
@@ -29,6 +28,36 @@ class CircularLoaderState extends State<CircularLoader>
   Duration timing = const Duration(milliseconds: 600);
   Helper get hp => Helper.of(context);
 
+  void listenToStatus(AnimationStatus status) {
+    log(status.name);
+  }
+
+  void getData() {
+    animationController =
+        AnimationController(duration: widget.duration, vsync: this);
+    CurvedAnimation curve =
+        CurvedAnimation(parent: animationController!, curve: Curves.easeOut);
+    animation = Tween<double>(
+            begin: hp.height / (widget.heightFactor ?? hp.factor), end: 0)
+        .animate(curve)
+      ..addStatusListener(listenToStatus)
+      ..addListener(reloadIfMounted);
+  }
+
+  void goFrontIfMounted() async {
+    if (mounted && animationController != null) {
+      await animationController!.forward();
+    }
+  }
+
+  void reloadIfMounted() {
+    if (mounted) setState(() {});
+  }
+
+  void assignState() async {
+    await Future.delayed(Duration.zero, getData);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -37,12 +66,17 @@ class CircularLoaderState extends State<CircularLoader>
 
   @override
   void dispose() {
-    animationController!.dispose();
+    if (animationController != null) {
+      animationController!.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final opacity = animation == null
+        ? 1.0
+        : (animation!.value > 100.0 ? 1.0 : animation!.value / 100);
     Widget lc;
     switch (widget.loaderType) {
       case LoaderType.normal:
@@ -122,39 +156,11 @@ class CircularLoaderState extends State<CircularLoader>
         break;
     }
     return AnimatedOpacity(
-        opacity: animation == null
-            ? 1 /*hp.factor / 2*/
-            : (animation!.value > 100.0 ? 1.0 : animation!.value / 100),
+        opacity: opacity,
         duration: widget.duration,
         child: Center(
-            widthFactor: widget.widthFactor,
             heightFactor: widget.heightFactor,
+            widthFactor: widget.widthFactor,
             child: lc));
-  }
-
-  void getData() {
-    animationController =
-        AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
-    CurvedAnimation curve =
-        CurvedAnimation(parent: animationController!, curve: Curves.easeOut);
-    animation = Tween<double>(
-            begin: hp.height / (widget.heightFactor ?? hp.factor), end: 0)
-        .animate(curve)
-      ..addListener(reloadIfMounted);
-  }
-
-  void goFrontIfMounted() async {
-    if (mounted) {
-      await animationController!.forward();
-    }
-  }
-
-  void reloadIfMounted() {
-    if (mounted) setState(() {});
-  }
-
-  void assignState() async {
-    await Future.delayed(Duration.zero, getData);
-    Timer(widget.duration, goFrontIfMounted).cancel();
   }
 }

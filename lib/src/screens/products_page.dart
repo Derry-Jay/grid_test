@@ -1,4 +1,4 @@
-import 'dart:math';
+import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 
 class ProductsPage extends StatefulWidget {
@@ -9,11 +9,7 @@ class ProductsPage extends StatefulWidget {
 }
 
 class ProductsPageState extends State<ProductsPage> {
-  MediaQueryData get dimensions => MediaQuery.of(context);
-  Size get size => dimensions.size;
-  double get height => size.height;
-  double get width => size.width;
-  double get radius => sqrt(pow(width, 2) + pow(height, 2));
+  Helper get hp => Helper.of(context);
 
   @override
   void initState() {
@@ -28,7 +24,7 @@ class ProductsPageState extends State<ProductsPage> {
           slivers: <Widget>[
             SliverToBoxAdapter(
               child: Container(
-                margin: EdgeInsets.all(radius / 80),
+                margin: EdgeInsets.all(hp.radius / 80),
                 child: Text(
                   'My Awesome Shop',
                   style: Theme.of(context)

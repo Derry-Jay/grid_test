@@ -67,6 +67,8 @@ enum ButtonType { raised, text, border }
 
 enum AlertType { normal, cupertino }
 
+WidgetsBinding? wb;
+
 Stream<Barcode>? bcs;
 
 StreamSubscription<Barcode>? bcsp;
