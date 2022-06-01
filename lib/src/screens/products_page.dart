@@ -12,11 +12,6 @@ class ProductsPageState extends State<ProductsPage> {
   Helper get hp => Helper.of(context);
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(

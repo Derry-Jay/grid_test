@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:grid_test/src/helpers/helper.dart';
+import 'package:grid_test/src/screens/first_page.dart';
 import 'package:grid_test/src/screens/grid_page.dart';
 import 'package:grid_test/src/models/scope_model_wrapper.dart';
 import 'package:grid_test/src/screens/qr_scan_screen.dart';
-import 'package:grid_test/src/screens/scanfile.dart';
+import 'package:grid_test/src/screens/flow_menu_screen.dart';
 import 'package:grid_test/src/screens/table_screen.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -49,10 +50,21 @@ class MyHomePageState extends State<MyHomePage> {
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(hp.loc.description),
-      ),
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          title: Text(hp.loc.description),
+          actions: [
+            IconButton(
+                onPressed: () async {
+                  final p = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FirstPage(),
+                      ));
+                  log(p);
+                },
+                icon: const Icon(Icons.arrow_forward_ios))
+          ]),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.

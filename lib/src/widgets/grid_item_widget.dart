@@ -31,7 +31,7 @@ class GridItemWidgetState extends State<GridItemWidget> {
             child: Column(
               children: [
                 Row(children: [
-                  SizedBox(),
+                  const SizedBox(),
                   Container(
                       decoration: BoxDecoration(
                           color: gps!.flags[widget.index]
@@ -60,7 +60,7 @@ class GridItemWidgetState extends State<GridItemWidget> {
             }
             gps!.flags[widget.index] = true;
           });
-          print(gps!.flags);
+          log(gps!.flags);
         });
   }
 }

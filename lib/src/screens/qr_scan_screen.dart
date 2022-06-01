@@ -68,13 +68,24 @@ class QRScanScreenState extends State<QRScanScreen> {
 
   Widget codeStreamBuilder(
       BuildContext context, AsyncSnapshot<Barcode> result) {
-    return Text(
-        result.hasData && !result.hasError ? (result.data!.code ?? '') : '');
+    return Column(
+      children: [
+        Text(result.hasData && !result.hasError
+            ? (result.data!.code ?? '')
+            : ''),
+        Image.memory(Uint8List.fromList(result.data!.rawBytes ?? <int>[]),
+            errorBuilder: errorBuilder)
+      ],
+    );
   }
 
   void customDispose() async {
     if (bcsp != null) {
       await bcsp!.cancel();
+    }
+    log(bcs);
+    if (bcs != null) {
+      await bcs!.drain();
     }
   }
 
@@ -105,11 +116,11 @@ class QRScanScreenState extends State<QRScanScreen> {
                           builder: codeStreamBuilder, stream: bcs),
                       Flexible(
                           child: QRView(
+                              key: qrKey,
+                              onQRViewCreated: onQRViewCreated,
                               overlay: QrScannerOverlayShape(
                                   cutOutHeight: hp.height / 2,
-                                  cutOutWidth: hp.width),
-                              key: qrKey,
-                              onQRViewCreated: onQRViewCreated))
+                                  cutOutWidth: hp.width)))
                     ],
                   )),
                   const Expanded(child: Text('Hi')),

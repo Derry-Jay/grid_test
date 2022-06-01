@@ -20,16 +20,19 @@ Stream<int> getValues(int seconds) async* {
   }
 }
 
-Stream<List<SomeItem>> getData() async* {
+Stream<List<SomeItem>> getData(Duration duration) async* {
   try {
-    final url =
-        Uri.tryParse('https://jsonplaceholder.typicode.com/todos') ?? Uri();
-    final response = await client.get(url);
-    yield response.statusCode == 200
-        ? List<Map<String, dynamic>>.from(json.decode(response.body))
-            .map<SomeItem>(SomeItem.fromMap)
-            .toList()
-        : <SomeItem>[];
+    while (true) {
+      await Future.delayed(duration);
+      final url =
+          Uri.tryParse('https://jsonplaceholder.typicode.com/todos') ?? Uri();
+      final response = await client.get(url);
+      yield response.statusCode == 200
+          ? List<Map<String, dynamic>>.from(json.decode(response.body))
+              .map<SomeItem>(SomeItem.fromMap)
+              .toList()
+          : <SomeItem>[];
+    }
   } catch (e) {
     log(e);
     yield <SomeItem>[];

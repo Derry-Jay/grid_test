@@ -83,49 +83,49 @@ class FirstPageState extends State<FirstPage> {
           child: Center(
         child: Column(
           children: <Widget>[
-            const SizedBox(height: 50, child: SomeItemListWidget()),
-            SizedBox(
-              width: 225.0 + 225.0 + 225.0 + 3.0,
-              height: 60.0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Container(
-                    width: 225.0,
-                    height: 60.0,
-                    color: hp.theme.dividerColor,
-                    padding: const EdgeInsets.only(
-                        top: 20, bottom: 15, left: 25, right: 20),
-                    child: Text('Delivery Date',
-                        style: TextStyle(
-                            color: hp.theme.secondaryHeaderColor,
-                            fontSize: 20)),
-                  ),
-                  Container(
-                    width: 225.0,
-                    height: 60.0,
-                    color: hp.theme.dividerColor,
-                    padding: const EdgeInsets.only(
-                        top: 20, bottom: 15, left: 25, right: 20),
-                    child: Text('Delivery ID',
-                        style: TextStyle(
-                            color: hp.theme.secondaryHeaderColor,
-                            fontSize: 20)),
-                  ),
-                  Container(
-                    width: 225.0,
-                    height: 60.0,
-                    color: hp.theme.dividerColor,
-                    padding: const EdgeInsets.only(
-                        top: 20, bottom: 15, left: 25, right: 20),
-                    child: Text('Customer',
-                        style: TextStyle(
-                            color: hp.theme.secondaryHeaderColor,
-                            fontSize: 20)),
-                  ),
-                ],
-              ),
-            )
+            SizedBox(height: hp.height*1.024, child: const SomeItemListWidget()),
+            // SizedBox(
+            //   width: 225.0 + 225.0 + 225.0 + 3.0,
+            //   height: 60.0,
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceAround,
+            //     children: [
+            //       Container(
+            //         width: 225.0,
+            //         height: 60.0,
+            //         color: hp.theme.dividerColor,
+            //         padding: const EdgeInsets.only(
+            //             top: 20, bottom: 15, left: 25, right: 20),
+            //         child: Text('Delivery Date',
+            //             style: TextStyle(
+            //                 color: hp.theme.secondaryHeaderColor,
+            //                 fontSize: 20)),
+            //       ),
+            //       Container(
+            //         width: 225.0,
+            //         height: 60.0,
+            //         color: hp.theme.dividerColor,
+            //         padding: const EdgeInsets.only(
+            //             top: 20, bottom: 15, left: 25, right: 20),
+            //         child: Text('Delivery ID',
+            //             style: TextStyle(
+            //                 color: hp.theme.secondaryHeaderColor,
+            //                 fontSize: 20)),
+            //       ),
+            //       Container(
+            //         width: 225.0,
+            //         height: 60.0,
+            //         color: hp.theme.dividerColor,
+            //         padding: const EdgeInsets.only(
+            //             top: 20, bottom: 15, left: 25, right: 20),
+            //         child: Text('Customer',
+            //             style: TextStyle(
+            //                 color: hp.theme.secondaryHeaderColor,
+            //                 fontSize: 20)),
+            //       ),
+            //     ],
+            //   ),
+            // )
           ],
         ),
       )),

@@ -73,7 +73,7 @@ Stream<Barcode>? bcs;
 
 StreamSubscription<Barcode>? bcsp;
 
-getData(Map<String, dynamic> data) {
+List getList(Map<String, dynamic> data) {
   return data['data'] ?? [];
 }
 
