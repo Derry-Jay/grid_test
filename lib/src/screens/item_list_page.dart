@@ -32,6 +32,68 @@ class ItemListPageState extends State<ItemListPage> {
             // Expanded(
             //     child: ItemListWidget(
             //         items: ItemBase.fromMap().items, dimensions: hp.dimensions)),
+
+// firstTimeinitFlag
+//             ?
+//             // FutureBuilder<PalletLocationModel>(
+            //     future: api.palletLocations(),
+            //     builder: (context, snapshot) {
+            //       if (snapshot.hasData) {
+            //         PalletLocationModel? deliveryData = snapshot.data;
+            //         return
+
+            //   } else {
+            // return ;
+            //   }
+            // })
+            // : FutureBuilder<Getpalletlocationsmodel>(
+            //     future: api.getPalletLocations(pallerdropdownvalue?.id ?? 0,
+            //         zonedropdownvalue?.id ?? 0, rackdropdownvalue?.id ?? 0),
+            //     builder: (context, snapshot) {
+            //       if (snapshot.hasData) {
+            //         Getpalletlocationsmodel? deliveryData = snapshot.data;
+            //         return ListView.builder(
+            //           scrollDirection: Axis.vertical,
+            //           shrinkWrap: true,
+            //           physics: BouncingScrollPhysics(
+            //               parent: deliveryData!
+            //                           .palletLocations.getLocations.length <=
+            //                       10
+            //                   ? const NeverScrollableScrollPhysics()
+            //                   : const AlwaysScrollableScrollPhysics()),
+            //           itemBuilder: (context, index) {
+            //             final item =
+            //                 deliveryData.palletLocations.getLocations[index];
+            //             // log('Hi');
+            //             // log(item.status);
+            //             // log('Bye');
+            //             return Container(
+            //               margin: const EdgeInsets.only(top: 1),
+            //               padding: const EdgeInsets.all(15),
+            //               alignment: Alignment.topLeft,
+            //               height: 50,
+            //               color: hp.parseBool(deliveryData
+            //                       .palletLocations.getLocations[index].status)
+            //                   ? hp.theme.splashColor
+            //                   : hp.theme.toggleableActiveColor,
+            //               child: Text(
+            //                 deliveryData.palletLocations.getLocations[index]
+            //                         .uniqueId ??
+            //                     '',
+            //                 textAlign: TextAlign.center,
+            //                 style: const TextStyle(
+            //                     fontSize: 17, color: Colors.white),
+            //               ),
+            //             );
+            //           },
+            //           itemCount:
+            //               deliveryData.palletLocations.getLocations.length,
+            //         );
+            //       } else {
+            //         return Image.asset(
+            //             gc.getValue('asset_image_path') + 'puzzle_128.gif');
+            //       }
+            //     }),
             Container(
               decoration: BoxDecoration(color: Colors.grey.shade200),
               child: const Center(

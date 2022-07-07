@@ -8,7 +8,7 @@ class SomeItemWidget extends StatefulWidget {
   const SomeItemWidget({Key? key, required this.item, required this.index})
       : super(key: key);
   @override
-  State<StatefulWidget> createState() => SomeItemWidgetState();
+  SomeItemWidgetState createState() => SomeItemWidgetState();
 }
 
 class SomeItemWidgetState extends State<SomeItemWidget> {
@@ -58,6 +58,8 @@ class SomeItemWidgetState extends State<SomeItemWidget> {
                                   fontWeight: FontWeight.w700,
                                   color: Colors.grey)))
                     ])),
-            onTap: () {}));
+            onTap: () {
+              log(widget.index);
+            }));
   }
 }

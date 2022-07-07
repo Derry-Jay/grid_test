@@ -3,7 +3,8 @@ import 'package:grid_test/src/helpers/helper.dart';
 import 'package:grid_test/src/screens/first_page.dart';
 import 'package:grid_test/src/screens/grid_page.dart';
 import 'package:grid_test/src/models/scope_model_wrapper.dart';
-import 'package:grid_test/src/screens/qr_scan_screen.dart';
+import 'package:grid_test/src/screens/products_page.dart';
+// import 'package:grid_test/src/screens/qr_scan_screen.dart';
 import 'package:grid_test/src/screens/flow_menu_screen.dart';
 import 'package:grid_test/src/screens/table_screen.dart';
 
@@ -81,7 +82,7 @@ class MyHomePageState extends State<MyHomePage> {
           // Column has various properties to control how it sizes itself and
           // how it positions its children. Here we use mainAxisAlignment to
           // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
+          // axis because s are vertical (the cross axis would be
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -103,7 +104,7 @@ class MyHomePageState extends State<MyHomePage> {
               final p = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const QRScanScreen()));
+                      builder: (context) => const ProductsPage()));
               log(p);
             }),
             ElevatedButton(

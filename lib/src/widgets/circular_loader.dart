@@ -11,8 +11,8 @@ class CircularLoader extends StatefulWidget {
   const CircularLoader(
       {Key? key,
       this.loaderType,
-      this.heightFactor,
       this.widthFactor,
+      this.heightFactor,
       required this.color,
       required this.duration})
       : super(key: key);
@@ -35,8 +35,10 @@ class CircularLoaderState extends State<CircularLoader>
   void getData() {
     animationController =
         AnimationController(duration: widget.duration, vsync: this);
-    CurvedAnimation curve =
-        CurvedAnimation(parent: animationController!, curve: Curves.easeOut);
+    CurvedAnimation curve = CurvedAnimation(
+        parent: animationController ??
+            AnimationController(duration: widget.duration, vsync: this),
+        curve: Curves.easeOut);
     animation = Tween<double>(
             begin: hp.height / (widget.heightFactor ?? hp.factor), end: 0)
         .animate(curve)
@@ -79,9 +81,6 @@ class CircularLoaderState extends State<CircularLoader>
         : (animation!.value > 100.0 ? 1.0 : animation!.value / 100);
     Widget lc;
     switch (widget.loaderType) {
-      case LoaderType.normal:
-        lc = CircularProgressIndicator(color: widget.color);
-        break;
       case LoaderType.chasingDots:
         lc = SpinKitChasingDots(color: widget.color);
         break;
@@ -151,6 +150,7 @@ class CircularLoaderState extends State<CircularLoader>
       case LoaderType.wave:
         lc = SpinKitWave(color: widget.color);
         break;
+      case LoaderType.normal:
       default:
         lc = CircularProgressIndicator(color: widget.color);
         break;

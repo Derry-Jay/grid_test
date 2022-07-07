@@ -1,6 +1,7 @@
 import '../helpers/helper.dart';
+import 'package:flutter_cart/model/cart_model.dart';
 
-class Item {
+class Item extends CartItem {
   late int id;
   late String name, type, code, cate, owner, amount, date;
   late bool status;

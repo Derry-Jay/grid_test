@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'dart:math';
 import 'dart:async';
 import 'dart:typed_data';
+import '../backend/api.dart';
 import '/generated/l10n.dart';
+import '../widgets/empty_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/custom_button.dart';
@@ -69,156 +72,13 @@ enum AlertType { normal, cupertino }
 
 WidgetsBinding? wb;
 
-Stream<Barcode>? bcs;
+List<Stream<Barcode>> css = <Stream<Barcode>>[];
 
-StreamSubscription<Barcode>? bcsp;
-
-List getList(Map<String, dynamic> data) {
-  return data['data'] ?? [];
-}
-
-int getIntData(Map<String, dynamic> data) {
-  return (data['data'] as int);
-}
-
-double getDoubleData(Map<String, dynamic> data) {
-  return (data['data'] as double);
-}
-
-bool getBoolData(Map<String, dynamic> data) {
-  return (data['data'] as bool);
-}
-
-getObjectData(Map<String, dynamic> data) {
-  return data['data'] ?? <String, dynamic>{};
-}
-
-Future<Uint8List> getBytesFromAsset(String path, {int? width}) async {
-  ByteData data = await rootBundle.load(path);
-  Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),
-      targetWidth: width);
-  FrameInfo fi = await codec.getNextFrame();
-  return (await fi.image.toByteData(format: ImageByteFormat.png))!
-      .buffer
-      .asUint8List();
-}
+List<StreamSubscription<Barcode>> scs = <StreamSubscription<Barcode>>[];
 
 void log(Object? object) {
   if (kDebugMode) print(object);
 }
-
-List<Icon> getStarsList(double rate, {double size = 18}) {
-  var list = <Icon>[];
-  list = List.generate(rate.floor(), (index) {
-    return Icon(Icons.star, size: size, color: const Color(0xFFFFB24D));
-  });
-  if (rate - rate.floor() > 0) {
-    list.add(Icon(Icons.star_half, size: size, color: const Color(0xFFFFB24D)));
-  }
-  list.addAll(
-      List.generate(5 - rate.floor() - (rate - rate.floor()).ceil(), (index) {
-    return Icon(Icons.star_border, size: size, color: const Color(0xFFFFB24D));
-  }));
-  return list;
-}
-
-Future<List<String>> getLocalStorageKeys() async {
-  final prefs = await sharedPrefs;
-  return prefs.getKeys().toList();
-}
-
-bool parseBool(String? source) {
-  return source != null &&
-      source.isNotEmpty &&
-      (source.toLowerCase() == 'true' ||
-          source.toUpperCase() == 'TRUE' ||
-          ((int.tryParse(source) ?? 0) > 0));
-}
-
-String limitString(String text, {int limit = 24, String hiddenText = '...'}) {
-  return text.substring(0, min<int>(limit, text.length)) +
-      (text.length > limit ? hiddenText : '');
-}
-
-String getCreditCardNumber(String number) {
-  String result = '';
-  if (number.isNotEmpty && number.length == 16) {
-    result = number.substring(0, 4);
-    result += ' ${number.substring(4, 8)}';
-    result += ' ${number.substring(8, 12)}';
-    result += ' ${number.substring(12, 16)}';
-  }
-  return result;
-}
-
-Uri getUri(String path) {
-  String path = Uri.parse(GlobalConfiguration().getValue('base_url')).path;
-  if (!path.endsWith('/')) {
-    path += '/';
-  }
-  Uri uri = Uri(
-      scheme: Uri.parse(GlobalConfiguration().getValue('base_url')).scheme,
-      host: Uri.parse(GlobalConfiguration().getValue('base_url')).host,
-      port: Uri.parse(GlobalConfiguration().getValue('base_url')).port,
-      path: path + path);
-  return uri;
-}
-
-Color getColorFromHex(String hex) {
-  if (hex.contains('#')) {
-    return Color(int.parse(hex.replaceAll('#', '0xFF')));
-  } else {
-    return Color(int.parse('0xFF$hex'));
-  }
-}
-
-BoxFit getBoxFit(String boxFit) {
-  switch (boxFit) {
-    case 'cover':
-      return BoxFit.cover;
-    case 'fill':
-      return BoxFit.fill;
-    case 'contain':
-      return BoxFit.contain;
-    case 'fit_height':
-      return BoxFit.fitHeight;
-    case 'fit_width':
-      return BoxFit.fitWidth;
-    case 'none':
-      return BoxFit.none;
-    case 'scale_down':
-      return BoxFit.scaleDown;
-    default:
-      return BoxFit.cover;
-  }
-}
-
-AlignmentDirectional getAlignmentDirectional(String alignmentDirectional) {
-  switch (alignmentDirectional) {
-    case 'top_start':
-      return AlignmentDirectional.topStart;
-    case 'top_center':
-      return AlignmentDirectional.topCenter;
-    case 'top_end':
-      return AlignmentDirectional.topEnd;
-    case 'center_start':
-      return AlignmentDirectional.centerStart;
-    case 'center':
-      return AlignmentDirectional.topCenter;
-    case 'center_end':
-      return AlignmentDirectional.centerEnd;
-    case 'bottom_start':
-      return AlignmentDirectional.bottomStart;
-    case 'bottom_center':
-      return AlignmentDirectional.bottomCenter;
-    case 'bottom_end':
-      return AlignmentDirectional.bottomEnd;
-    default:
-      return AlignmentDirectional.bottomEnd;
-  }
-}
-
-String putDateToString(DateTime dt) => '${dt.month}/${dt.year}';
 
 void rollbackOrientations() async {
   await SystemChrome.setPreferredOrientations([
@@ -237,77 +97,14 @@ void lockScreenRotation() async {
   ]);
 }
 
-TimeOfDay getTime(String s) {
-  if (s.isEmpty || ':'.allMatches(s).length != 2) {
-    return const TimeOfDay(hour: 0, minute: 0);
-  } else {
-    final a = s.trim().split(':');
-    return TimeOfDay(
-        hour: (int.tryParse(a.first) ?? 0), minute: (int.tryParse(a[1]) ?? 0));
-  }
-}
-
-bool hasOnlyZeroes(List<num> list) {
-  if (list.isEmpty) {
-    return true;
-  } else {
-    bool val = true;
-    for (num i in list) {
-      if (i != 0) {
-        val = false;
-        break;
-      } else {
-        continue;
-      }
+void hideLoader(Duration time, {LoaderType? type}) {
+  Timer(time, () {
+    try {
+      overlayLoader(time, type: type).remove();
+    } catch (e) {
+      log(e);
     }
-    return val;
-  }
-}
-
-num getSumOfNumList(List<num> list) {
-  if (list.isEmpty) {
-    return num.tryParse('0') ?? 0;
-  } else {
-    num s = 0;
-    for (num i in list) {
-      s += i;
-    }
-    return s;
-  }
-}
-
-num getLargestNumber(List<num> list) {
-  if (list.isEmpty) {
-    return -1;
-  } else if (list.length == 1) {
-    return list.first;
-  } else {
-    num val = list.first;
-    for (num i in list) {
-      if (i > val) val = i;
-    }
-    return val;
-  }
-}
-
-bool compareDates(DateTime a, DateTime b) {
-  return a.year == b.year &&
-      a.month == b.month &&
-      a.day == b.day &&
-      a.hour == b.hour &&
-      a.minute == b.minute &&
-      a.second == b.second &&
-      a.millisecond == b.millisecond &&
-      a.microsecond == b.microsecond;
-}
-
-double getTax(orderamount) {
-  return (5 * orderamount) / 100;
-}
-
-bool predicate(Route<dynamic> route) {
-  log(route);
-  return false;
+  }).cancel();
 }
 
 OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
@@ -330,16 +127,6 @@ OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
   }
 
   return OverlayEntry(builder: loaderBuilder);
-}
-
-void hideLoader(Duration time, {LoaderType? type}) {
-  Timer(time, () {
-    try {
-      overlayLoader(time, type: type).remove();
-    } catch (e) {
-      log(e);
-    }
-  }).cancel();
 }
 
 Widget errorBuilder(BuildContext context, Object object, StackTrace? trace) {
@@ -400,6 +187,255 @@ Future<bool> revealToast(String content,
   }
 }
 
+TimeOfDay getTime(String s) {
+  if (s.isEmpty || ':'.allMatches(s).length != 2) {
+    return const TimeOfDay(hour: 0, minute: 0);
+  } else {
+    final a = s.trim().split(':');
+    return TimeOfDay(
+        hour: (int.tryParse(a.first) ?? 0), minute: (int.tryParse(a[1]) ?? 0));
+  }
+}
+
+bool hasOnlyZeroes(List<num> list) {
+  if (list.isEmpty) {
+    return true;
+  } else {
+    bool val = true;
+    for (num i in list) {
+      if (i != 0) {
+        val = false;
+        break;
+      } else {
+        continue;
+      }
+    }
+    return val;
+  }
+}
+
+num getSumOfNumList(List<num> list) {
+  if (list.isEmpty) {
+    return num.tryParse('0') ?? 0;
+  } else {
+    num s = 0;
+    for (num i in list) {
+      s += i;
+    }
+    return s;
+  }
+}
+
+num getLargestNumber(List<num> list) {
+  if (list.isEmpty) {
+    return -1;
+  } else if (list.length == 1) {
+    return list.first;
+  } else {
+    num val = list.first;
+    for (num i in list) {
+      if (i > val) val = i;
+    }
+    return val;
+  }
+}
+
+int largestFactorUnderTen(int no, {int lmt = 10}) {
+  int fact = 0;
+  for (int i = 2; i < no; i++) {
+    if (i > (lmt - 1)) {
+      break;
+    } else if (no % i == 0) {
+      fact = i;
+    }
+  }
+  return fact;
+}
+
+bool compareDates(DateTime a, DateTime b) {
+  return a.year == b.year &&
+      a.month == b.month &&
+      a.day == b.day &&
+      a.hour == b.hour &&
+      a.minute == b.minute &&
+      a.second == b.second &&
+      a.millisecond == b.millisecond &&
+      a.microsecond == b.microsecond;
+}
+
+double getTax(num orderamount) {
+  return (5 * orderamount) / 100;
+}
+
+bool predicate(Route<dynamic> route) {
+  log(route);
+  return false;
+}
+
+List<Icon> getStarsList(double rate, {double size = 18}) {
+  final list = List<Icon>.generate(rate.floor(), (index) {
+    return Icon(Icons.star, size: size, color: const Color(0xFFFFB24D));
+  });
+  if (rate - rate.floor() > 0) {
+    list.add(Icon(Icons.star_half, size: size, color: const Color(0xFFFFB24D)));
+  }
+  list.addAll(List<Icon>.generate(
+      5 - rate.floor() - (rate - rate.floor()).ceil(), (index) {
+    return Icon(Icons.star_border, size: size, color: const Color(0xFFFFB24D));
+  }));
+  return list;
+}
+
+Future<List<String>> getLocalStorageKeys() async {
+  final prefs = await sharedPrefs;
+  return prefs.getKeys().toList();
+}
+
+bool parseBool(String? source) {
+  return (source?.isNotEmpty ?? false) &&
+      (source?.toLowerCase() == 'true' ||
+          source?.toUpperCase() == 'TRUE' ||
+          source?.toLowerCase() == 'yes' ||
+          source?.toUpperCase() == 'YES' ||
+          source?.toLowerCase() == 'ok' ||
+          source?.toUpperCase() == 'OK' ||
+          ((int.tryParse(source ?? '0') ?? 0) > 0));
+}
+
+String limitString(String text, {int limit = 24, String hiddenText = '...'}) {
+  return text.substring(0, min<int>(limit, text.length)) +
+      (text.length > limit ? hiddenText : '');
+}
+
+String getCreditCardNumber(String number) {
+  String result = '';
+  if (number.isNotEmpty && number.length == 16) {
+    result = number.substring(0, 4);
+    result += ' ${number.substring(4, 8)}';
+    result += ' ${number.substring(8, 12)}';
+    result += ' ${number.substring(12, 16)}';
+  }
+  return result;
+}
+
+Uri getUri(String path) {
+  String path =
+      Uri.tryParse(gc?.getValue<String>('base_url') ?? '')?.path ?? '';
+  if (!path.endsWith('/')) {
+    path += '/';
+  }
+  Uri uri = Uri(
+      scheme: Uri.tryParse(gc?.getValue<String>('base_url') ?? '')?.scheme,
+      host: Uri.tryParse(gc?.getValue<String>('base_url') ?? '')?.host,
+      port: Uri.tryParse(gc?.getValue('base_url') ?? '')?.port,
+      path: path + path);
+  return uri;
+}
+
+Color getColorFromHex(String hex) {
+  if (hex.contains('#')) {
+    return Color(int.parse(hex.replaceAll('#', '0xFF')));
+  } else {
+    return Color(int.parse('0xFF$hex'));
+  }
+}
+
+BoxFit getBoxFit(String boxFit) {
+  switch (boxFit) {
+    case 'cover':
+      return BoxFit.cover;
+    case 'fill':
+      return BoxFit.fill;
+    case 'contain':
+      return BoxFit.contain;
+    case 'fit_height':
+      return BoxFit.fitHeight;
+    case 'fit_width':
+      return BoxFit.fitWidth;
+    case 'none':
+      return BoxFit.none;
+    case 'scale_down':
+      return BoxFit.scaleDown;
+    default:
+      return BoxFit.cover;
+  }
+}
+
+AlignmentDirectional getAlignmentDirectional(String alignmentDirectional) {
+  switch (alignmentDirectional) {
+    case 'top_start':
+      return AlignmentDirectional.topStart;
+    case 'top_center':
+      return AlignmentDirectional.topCenter;
+    case 'top_end':
+      return AlignmentDirectional.topEnd;
+    case 'center_start':
+      return AlignmentDirectional.centerStart;
+    case 'center':
+      return AlignmentDirectional.topCenter;
+    case 'center_end':
+      return AlignmentDirectional.centerEnd;
+    case 'bottom_start':
+      return AlignmentDirectional.bottomStart;
+    case 'bottom_center':
+      return AlignmentDirectional.bottomCenter;
+    case 'bottom_end':
+      return AlignmentDirectional.bottomEnd;
+    default:
+      return AlignmentDirectional.bottomEnd;
+  }
+}
+
+List getList(Map<String, dynamic> data) {
+  return data['data'] ?? [];
+}
+
+int getIntData(Map<String, dynamic> data) {
+  return (data['data'] as int);
+}
+
+double getDoubleData(Map<String, dynamic> data) {
+  return (data['data'] as double);
+}
+
+bool getBoolData(Map<String, dynamic> data) {
+  return (data['data'] as bool);
+}
+
+String getData(List<int> values) {
+  return base64.encode(values);
+}
+
+Uint8List putData(String value) {
+  return base64.decode(value);
+}
+
+Uint8List fromIntList(List<int> list) {
+  return putData(getData(list));
+}
+
+Widget imageFromBytesBuilder(
+    BuildContext context, List<int>? pic, Widget? child) {
+  try {
+    return Image.memory(Uint8List.fromList(pic!));
+  } catch (e) {
+    log(e);
+    return (child ?? const EmptyWidget());
+  }
+}
+
+Future<Uint8List> getBytesFromAsset(String path, {int? width}) async {
+  ByteData data = await rootBundle.load(path);
+  final codec = await instantiateImageCodec(data.buffer.asUint8List(),
+      targetWidth: width);
+  FrameInfo fi = await codec.getNextFrame();
+  return (await fi.image.toByteData(format: ImageByteFormat.png))!
+      .buffer
+      .asUint8List();
+}
+
+String putDateToString(DateTime dt) => '${dt.month}/${dt.year}';
+
 class Helper extends ChangeNotifier {
   late BuildContext buildContext;
   DateTime? currentBackPressTime;
@@ -437,7 +473,7 @@ class Helper extends ChangeNotifier {
   void showStatusBar() async {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: [SystemUiOverlay.top]);
-    st!.setState(() {});
+    st?.setState(() {});
   }
 
   String trans(String text) {
@@ -492,8 +528,8 @@ class Helper extends ChangeNotifier {
   }
 
   void addLoader(Duration time, {LoaderType? type}) {
-    if (ol != null && ol!.mounted) {
-      ol!.insert(overlayLoader(time, type: type));
+    if (ol?.mounted ?? false) {
+      ol?.insert(overlayLoader(time, type: type));
     }
   }
 
@@ -566,20 +602,20 @@ class Helper extends ChangeNotifier {
   }
 
   Future<bool> revealDialogBox(List<String> options, List<VoidCallback> actions,
-      {String? action,
-      String? title,
+      {String? title,
+      String? action,
       AlertType? type,
       bool? dismissive,
-      EdgeInsets? titlePadding,
-      EdgeInsets? actionPadding,
-      EdgeInsets? buttonPadding,
+      Curve? insetAnimation,
       TextStyle? titleStyle,
       TextStyle? actionStyle,
       TextStyle? optionStyle,
-      ScrollController? scrollController,
-      ScrollController? actionScrollController,
       Duration? insetDuration,
-      Curve? insetAnimation}) async {
+      EdgeInsets? titlePadding,
+      EdgeInsets? actionPadding,
+      EdgeInsets? buttonPadding,
+      ScrollController? scrollController,
+      ScrollController? actionScrollController}) async {
     Widget optionsMap(String e) {
       final child = Text(e, style: optionStyle);
       final onTap = actions[options.indexOf(e)];
@@ -618,40 +654,88 @@ class Helper extends ChangeNotifier {
             actions.isNotEmpty;
   }
 
+  Future<bool> showSimpleYesNo(
+      {bool? flag,
+      bool? reverse,
+      String? title,
+      String? action,
+      AlertType? type,
+      bool? dismissive,
+      Curve? insetAnimation,
+      TextStyle? titleStyle,
+      TextStyle? actionStyle,
+      TextStyle? optionStyle,
+      Duration? insetDuration,
+      EdgeInsets? titlePadding,
+      EdgeInsets? actionPadding,
+      EdgeInsets? buttonPadding,
+      ScrollController? scrollController,
+      ScrollController? actionScrollController}) {
+    VoidCallback mapAction(String action) {
+      return () {
+        goBack(result: parseBool(action));
+      };
+    }
+
+    final options = [
+      (flag ?? true) ? 'YES' : 'OK',
+      (flag ?? true) ? 'NO' : 'Cancel'
+    ];
+    final actions = ((reverse ?? false) ? options.reversed : options)
+        .map<VoidCallback>(mapAction)
+        .toList();
+    return revealDialogBox(options, actions,
+        type: type,
+        title: title,
+        action: action,
+        dismissive: dismissive,
+        titleStyle: titleStyle,
+        actionStyle: actionStyle,
+        optionStyle: optionStyle,
+        titlePadding: titlePadding,
+        insetDuration: insetDuration,
+        buttonPadding: buttonPadding,
+        actionPadding: actionPadding,
+        insetAnimation: insetAnimation,
+        scrollController: scrollController,
+        actionScrollController: actionScrollController);
+  }
+
   Future<bool> showSimplePopup(String option, VoidCallback onActionDone,
       {String? action,
       String? title,
       AlertType? type,
       bool? dismissive,
-      EdgeInsets? titlePadding,
-      EdgeInsets? actionPadding,
-      EdgeInsets? buttonPadding,
+      Curve? insetAnimation,
       TextStyle? titleStyle,
       TextStyle? actionStyle,
       TextStyle? optionStyle,
-      ScrollController? scrollController,
-      ScrollController? actionScrollController,
       Duration? insetDuration,
-      Curve? insetAnimation}) {
+      EdgeInsets? titlePadding,
+      EdgeInsets? actionPadding,
+      EdgeInsets? buttonPadding,
+      ScrollController? scrollController,
+      ScrollController? actionScrollController}) {
     return revealDialogBox([option], [onActionDone],
         type: type,
+        title: title,
+        action: action,
         dismissive: dismissive,
         titleStyle: titleStyle,
         actionStyle: actionStyle,
+        optionStyle: optionStyle,
         titlePadding: titlePadding,
         buttonPadding: buttonPadding,
         actionPadding: actionPadding,
-        action: action,
-        title: title,
-        scrollController: scrollController,
-        actionScrollController: actionScrollController,
-        insetAnimation: insetAnimation,
         insetDuration: insetDuration,
-        optionStyle: optionStyle);
+        insetAnimation: insetAnimation,
+        scrollController: scrollController,
+        actionScrollController: actionScrollController);
   }
 
   Future<T?> appearDialogBox<T>(
-      {Widget? title,
+      {Widget? child,
+      Widget? title,
       AlertType? type,
       Widget? content,
       bool? dismissive,
@@ -682,7 +766,6 @@ class Helper extends ChangeNotifier {
               insetAnimationDuration:
                   insetDuration ?? const Duration(milliseconds: 100));
         case AlertType.normal:
-        default:
           return AlertDialog(
               title: title,
               content: content,
@@ -696,6 +779,8 @@ class Helper extends ChangeNotifier {
               contentPadding: contentPadding ??
                   EdgeInsets.symmetric(
                       horizontal: width / 25, vertical: height / 100));
+        default:
+          return child ?? const EmptyWidget();
       }
     }
 
@@ -781,16 +866,17 @@ class Helper extends ChangeNotifier {
         .then(onGoBack ?? doNothing);
   }
 
-  String? validatePhoneNumber(String phone) {
-    return (phone.length == 10 && int.tryParse(phone) != null
+  String? validatePhoneNumber(String? phone) {
+    return (phone != null && phone.length == 10 && int.tryParse(phone) != null
         ? null
         : loc.not_a_valid_phone);
   }
 
-  String? validatePassword(String password) {
+  String? validatePassword(String? password) {
     RegExp re =
         RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#$&*~]).{8,}$');
-    return password.isNotEmpty &&
+    return password != null &&
+            password.isNotEmpty &&
             password.length >= 6 &&
             password.length <= 12 &&
             re.hasMatch(password)
@@ -798,16 +884,19 @@ class Helper extends ChangeNotifier {
         : loc.wrong_email_or_password;
   }
 
-  String? validateEmail(String email) {
+  String? validateEmail(String? email) {
     RegExp re = RegExp(
         r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
-    return re.hasMatch(email) && re.allMatches(email).length == 1
+    return email != null &&
+            email.isNotEmpty &&
+            re.hasMatch(email) &&
+            re.allMatches(email).length == 1
         ? null
         : loc.not_a_valid_email;
   }
 
-  String? validateName(String value) =>
-      value.isEmpty ? loc.not_a_valid_full_name : null;
+  String? validateName(String? value) =>
+      value != null || value!.isEmpty ? loc.not_a_valid_full_name : null;
 
   void getConnectStatus({VoidCallback? vcb}) async {
     final connectivityResult = await con.checkConnectivity();

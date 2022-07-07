@@ -23,10 +23,11 @@ class SomeItemListWidgetState extends State<SomeItemListWidget> {
       BuildContext context, AsyncSnapshot<List<SomeItem>> items) {
     log(items.data);
     Widget getItem(BuildContext context, int index) {
-      return SomeItemWidget(item: items.data![index], index: index);
+      return SomeItemWidget(
+          item: items.data?[index] ?? SomeItem.emptyItem, index: index);
     }
 
-    return items.hasData && !items.hasError && items.data!.isNotEmpty
+    return items.hasData && !items.hasError && (items.data?.isNotEmpty ?? false)
         ? ListView.builder(itemCount: items.data?.length, itemBuilder: getItem)
         : (!items.hasData || items.hasError
             ? const CircularLoader(
@@ -37,6 +38,6 @@ class SomeItemListWidgetState extends State<SomeItemListWidget> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<SomeItem>>(
-        builder: listBuilder, stream: getData(const Duration(seconds: 5)));
+        builder: listBuilder, stream: receiveData(const Duration(seconds: 5)));
   }
 }

@@ -1,3 +1,4 @@
+import '../backend/api.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 import '../widgets/some_item_list_widget.dart';
@@ -11,6 +12,10 @@ class FirstPage extends StatefulWidget {
 
 class FirstPageState extends State<FirstPage> {
   Helper get hp => Helper.of(context);
+  Widget valueBuilder(BuildContext context, AsyncSnapshot<int> value) {
+    return Text(value.data.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,10 +73,12 @@ class FirstPageState extends State<FirstPage> {
           //   onPressed: CallContact,
 
           // ),
-          // IconButton(
-          //     onPressed: hp.doNothing,
-          //     icon: const Icon(Icons.chat_bubble),
-          //     tooltip: 'notification'),
+          IconButton(
+              onPressed: () {
+                hp.goTo('/grid');
+              },
+              icon: const Icon(Icons.chat_bubble),
+              tooltip: 'chat'),
           // IconButton(
           //     onPressed: hp.doNothing,
           //     icon: Image.asset('assets/images/logout.png'),
@@ -80,55 +87,58 @@ class FirstPageState extends State<FirstPage> {
       ),
       // drawer: const Drawer(),
       body: SingleChildScrollView(
-          child: Center(
-        child: Column(
-          children: <Widget>[
-            SizedBox(height: hp.height*1.024, child: const SomeItemListWidget()),
-            // SizedBox(
-            //   width: 225.0 + 225.0 + 225.0 + 3.0,
-            //   height: 60.0,
-            //   child: Row(
-            //     mainAxisAlignment: MainAxisAlignment.spaceAround,
-            //     children: [
-            //       Container(
-            //         width: 225.0,
-            //         height: 60.0,
-            //         color: hp.theme.dividerColor,
-            //         padding: const EdgeInsets.only(
-            //             top: 20, bottom: 15, left: 25, right: 20),
-            //         child: Text('Delivery Date',
-            //             style: TextStyle(
-            //                 color: hp.theme.secondaryHeaderColor,
-            //                 fontSize: 20)),
-            //       ),
-            //       Container(
-            //         width: 225.0,
-            //         height: 60.0,
-            //         color: hp.theme.dividerColor,
-            //         padding: const EdgeInsets.only(
-            //             top: 20, bottom: 15, left: 25, right: 20),
-            //         child: Text('Delivery ID',
-            //             style: TextStyle(
-            //                 color: hp.theme.secondaryHeaderColor,
-            //                 fontSize: 20)),
-            //       ),
-            //       Container(
-            //         width: 225.0,
-            //         height: 60.0,
-            //         color: hp.theme.dividerColor,
-            //         padding: const EdgeInsets.only(
-            //             top: 20, bottom: 15, left: 25, right: 20),
-            //         child: Text('Customer',
-            //             style: TextStyle(
-            //                 color: hp.theme.secondaryHeaderColor,
-            //                 fontSize: 20)),
-            //       ),
-            //     ],
-            //   ),
-            // )
-          ],
-        ),
-      )),
+          child: SizedBox(
+              width: hp.width,
+              height: hp.height,
+              child: Column(
+                children: <Widget>[
+                  const Expanded(flex: 2, child: SomeItemListWidget()),
+                  Flexible(
+                      flex: 2,
+                      child: StreamBuilder<int>(
+                          builder: valueBuilder,
+                          stream: getValues(2),
+                          initialData: 0))
+                  // Row(
+                  //     mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  //     children: [
+                  //       Container(
+                  //         width: 225.0,
+                  //         height: 60.0,
+                  //         color: hp.theme.dividerColor,
+                  //         padding: const EdgeInsets.only(
+                  //             top: 20, bottom: 15, left: 25, right: 20),
+                  //         child: Text('Delivery Date',
+                  //             style: TextStyle(
+                  //                 color: hp.theme.secondaryHeaderColor,
+                  //                 fontSize: 20)),
+                  //       ),
+                  //       Container(
+                  //         width: 225.0,
+                  //         height: 60.0,
+                  //         color: hp.theme.dividerColor,
+                  //         padding: const EdgeInsets.only(
+                  //             top: 20, bottom: 15, left: 25, right: 20),
+                  //         child: Text('Delivery ID',
+                  //             style: TextStyle(
+                  //                 color: hp.theme.secondaryHeaderColor,
+                  //                 fontSize: 20)),
+                  //       ),
+                  //       Container(
+                  //         width: 225.0,
+                  //         height: 60.0,
+                  //         color: hp.theme.dividerColor,
+                  //         padding: const EdgeInsets.only(
+                  //             top: 20, bottom: 15, left: 25, right: 20),
+                  //         child: Text('Customer',
+                  //             style: TextStyle(
+                  //                 color: hp.theme.secondaryHeaderColor,
+                  //                 fontSize: 20)),
+                  //       ),
+                  //     ],
+                  //   ),
+                ],
+              ))),
       bottomNavigationBar: SizedBox(width: hp.width, height: 50),
     );
   }
