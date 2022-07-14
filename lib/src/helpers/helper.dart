@@ -1,8 +1,13 @@
-import 'dart:convert';
 import 'dart:ui';
 import 'dart:math';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
+import 'package:arkit_plugin/arkit_plugin.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:flutter_uxcam/flutter_uxcam.dart';
 import '../backend/api.dart';
 import '/generated/l10n.dart';
 import '../widgets/empty_widget.dart';
@@ -16,7 +21,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:global_configuration/global_configuration.dart';
 
 final sharedPrefs = SharedPreferences.getInstance();
 
@@ -38,6 +42,14 @@ final isWeb =
 final dF = isAndroid || isFuchsia || isLinux || isWindows;
 
 final isPortable = isAndroid || isIOS;
+
+ARKitController? arkitController;
+
+ScreenshotController con = ScreenshotController();
+
+Location location = Location();
+
+final uxc = FlutterUxConfig(userAppKey: '');
 
 enum LoaderType {
   normal,
@@ -97,6 +109,10 @@ void lockScreenRotation() async {
   ]);
 }
 
+bool Function(Route<dynamic>) getRoutePredicate(String routeName) {
+  return ModalRoute.withName(routeName);
+}
+
 void hideLoader(Duration time, {LoaderType? type}) {
   Timer(time, () {
     try {
@@ -130,12 +146,11 @@ OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
 }
 
 Widget errorBuilder(BuildContext context, Object object, StackTrace? trace) {
-  final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/loading.gif',
-      matchTextDirection: true,
-      height: size.height / 12.8,
-      width: size.width / 6.4,
-      fit: BoxFit.fill);
+  final hpe = Helper.of(context);
+  log(object);
+  log(trace);
+  return Icon(Icons.error,
+      size: hpe.height / 16, color: hpe.theme.secondaryHeaderColor);
 }
 
 Widget getPageLoader(Size size) {
@@ -386,12 +401,20 @@ AlignmentDirectional getAlignmentDirectional(String alignmentDirectional) {
   }
 }
 
-List getList(Map<String, dynamic> data) {
-  return data['data'] ?? [];
+List<double> getVector(LatLng point) {
+  final latRad = (point.latitude * 11) / 630; // convert to radians
+  final longRad = (point.longitude * 11) / 630; // convert to radians
+  return <double>[
+    (cos(latRad) * cos(longRad)),
+    (cos(latRad) * sin(longRad)),
+    sin(latRad)
+  ];
 }
 
-int getIntData(Map<String, dynamic> data) {
-  return (data['data'] as int);
+List<double> getCoords(LatLng point) {
+  final latRad = (point.latitude * 11) / 630; // convert to radians
+  final longRad = (point.longitude * 11) / 630; // convert to radians
+  return <double>[(cos(latRad) * cos(longRad)), (cos(latRad) * sin(longRad))];
 }
 
 double getDoubleData(Map<String, dynamic> data) {
@@ -412,6 +435,26 @@ Uint8List putData(String value) {
 
 Uint8List fromIntList(List<int> list) {
   return putData(getData(list));
+}
+
+double haversineDistance(LatLng a, LatLng b) {
+  double dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
+  double dLong = ((b.longitude - a.longitude).abs() * 11) / 630;
+  final v1 = 1 + cos(dLat);
+  final v2 = 2 *
+      cos((a.latitude * 11) / 630) *
+      cos((b.latitude * 11) / 630) *
+      cos(dLong);
+  return (12.742 * asin(sqrt(((v1 - v2).abs()) / 2)));
+}
+
+double getAngle(LatLng a, LatLng b) {
+  // double dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
+  double dLon = ((b.longitude - a.longitude).abs() * 11) / 630;
+  final y = sin(dLon) * cos(b.longitude);
+  final x = cos(a.latitude) * sin(b.latitude) -
+      sin(a.latitude) * cos(b.latitude) * cos(dLon);
+  return atan2(y, x);
 }
 
 Widget imageFromBytesBuilder(
@@ -473,7 +516,6 @@ class Helper extends ChangeNotifier {
   void showStatusBar() async {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: [SystemUiOverlay.top]);
-    st?.setState(() {});
   }
 
   String trans(String text) {
@@ -519,17 +561,109 @@ class Helper extends ChangeNotifier {
     return Future.value(true);
   }
 
-  void goTo(String route) async {
-    Navigator.pushNamed(buildContext, route);
+  void reload(VoidCallback vcb) {
+    st?.setState(vcb);
+  }
+
+  void goTo(String routeName, {dynamic args, VoidCallback? vcb}) async {
+    try {
+      if (route != null && route!.settings.name != routeName) {
+        final p = await nav.pushNamed(routeName, arguments: args);
+        log(p);
+        if (vcb != null) {
+          reload(vcb);
+        }
+      } else {
+        log(routeName);
+      }
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  void gotoOnce(String routeName,
+      {dynamic args, dynamic result, VoidCallback? vcb}) async {
+    try {
+      if (route?.settings.name != routeName) {
+        final p = await nav.pushReplacementNamed(routeName,
+            arguments: args, result: result);
+        if (vcb != null) {
+          reload(vcb);
+        }
+        log(p);
+      } else {
+        log(routeName);
+      }
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  void gotoForever(String routeName, {dynamic args}) async {
+    try {
+      if (route?.settings.name != routeName) {
+        final p = await nav.pushNamedAndRemoveUntil(routeName, predicate,
+            arguments: args);
+        log(p);
+      } else {
+        log(routeName);
+      }
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  void goBackForeverTo(String routeName) {
+    try {
+      nav.popUntil(getRoutePredicate(routeName));
+    } catch (e) {
+      log(e);
+    }
   }
 
   void goBack({dynamic result}) {
-    Navigator.pop(buildContext, result);
+    try {
+      log(result);
+      nav.pop(result);
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  void goBackEmpty() {
+    goBack();
+  }
+
+  void invokeVCB(VoidCallback vcb) {
+    log('object');
+    vcb.call();
+    log('object2');
   }
 
   void addLoader(Duration time, {LoaderType? type}) {
     if (ol?.mounted ?? false) {
       ol?.insert(overlayLoader(time, type: type));
+    }
+  }
+
+  void getConnectStatus({VoidCallback? vcb}) async {
+    final connectivityResult = await con.checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      final f1 = await revealDialogBox([
+        'Try Again'
+      ], [
+        () {
+          goBack(result: connectivityResult == ConnectivityResult.none);
+          getConnectStatus();
+        }
+      ],
+          action: 'You are Off-Line!!!!!',
+          type: AlertType.cupertino,
+          dismissive: false);
+      if (!f1) goBack();
+    } else {
+      // I am connected to a mobile network.
+      vcb?.call();
     }
   }
 
@@ -860,12 +994,6 @@ class Helper extends ChangeNotifier {
     return ls;
   }
 
-  void navigateTo(String route,
-      {dynamic arguments, FutureOr<dynamic> Function(dynamic)? onGoBack}) {
-    Navigator.pushNamed(buildContext, route, arguments: arguments)
-        .then(onGoBack ?? doNothing);
-  }
-
   String? validatePhoneNumber(String? phone) {
     return (phone != null && phone.length == 10 && int.tryParse(phone) != null
         ? null
@@ -898,59 +1026,11 @@ class Helper extends ChangeNotifier {
   String? validateName(String? value) =>
       value != null || value!.isEmpty ? loc.not_a_valid_full_name : null;
 
-  void getConnectStatus({VoidCallback? vcb}) async {
-    final connectivityResult = await con.checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      final f1 = await revealDialogBox([
-        'Try Again'
-      ], [
-        () {
-          goBack(result: connectivityResult == ConnectivityResult.none);
-          getConnectStatus();
-        }
-      ],
-          action: 'You are Off-Line!!!!!',
-          type: AlertType.cupertino,
-          dismissive: false);
-      if (!f1) goBack();
-    }
-    // I am connected to a mobile network.
-    else if (vcb != null) {
-      await SystemChannels.platform.invokeMethod(vcb.toString());
-    }
-  }
-
   String putDateTimeToString(DateTime element, String sep) {
     int ds = (element.millisecond * 1000) + element.microsecond;
     String str = element.year.toString();
     str +=
         ('$sep${element.month}$sep${element.day}|${element.hour}:${element.minute}:${element.second}.$ds');
     return str;
-  }
-
-  FutureOr<dynamic> doNothing(dynamic value) {
-    // if (element != null) {
-    log(value);
-    // } else {(element.month == null ? "" : )(element.day == null ? "" : )(element.hour == null ? "" : )(element.minute == null ? "" : )(element.second == null ? "" : )
-    // log("Year : ");
-    // log("Month : ");
-    // log("Country Name : ");
-    // log((element.year == null ? "" : )
-    //     "Admin Area : ");
-    // log("Sub Admin Area : ");
-    //   return "";
-    // }
-  }
-
-  void navigateWithoutGoBack(String route, {dynamic arguments}) {
-    Navigator.pushNamedAndRemoveUntil(buildContext, route, predicate,
-            arguments: arguments)
-        .then(doNothing);
-  }
-
-  void popAndPush(String route, {dynamic result, dynamic arguments}) {
-    Navigator.pushReplacementNamed(buildContext, route,
-            result: result, arguments: arguments)
-        .then(doNothing);
   }
 }

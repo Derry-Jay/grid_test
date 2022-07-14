@@ -44,9 +44,7 @@ class _FlowMenuState extends State<FlowMenu>
   void initState() {
     super.initState();
     menuAnimation = AnimationController(
-      duration: const Duration(milliseconds: 250),
-      vsync: this,
-    );
+        duration: const Duration(milliseconds: 250), vsync: this);
   }
 
   Widget flowMenuItem(IconData icon) {

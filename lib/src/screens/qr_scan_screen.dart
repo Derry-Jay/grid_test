@@ -123,8 +123,8 @@ class QRScanScreenState extends State<QRScanScreen> {
                               key: qrKey,
                               onQRViewCreated: onQRViewCreated,
                               overlay: QrScannerOverlayShape(
-                                  cutOutHeight: hp.height / 2,
-                                  cutOutWidth: hp.width)))
+                                  cutOutWidth: hp.width,
+                                  cutOutHeight: hp.height / 2)))
                     ],
                   )),
                   const Expanded(child: Text('Hi')),

@@ -1,7 +1,7 @@
-import 'package:flutter_cart/flutter_cart.dart';
-import 'package:flutter_cart/model/cart_response_wrapper.dart';
-import 'package:flutter_cart/model/cart_model.dart';
 import 'package:grid_test/src/models/item.dart';
+import 'package:flutter_cart/flutter_cart.dart';
+import 'package:flutter_cart/model/cart_model.dart';
+import 'package:flutter_cart/model/cart_response_wrapper.dart';
 
 class Cart implements FlutterCart{
   @override

@@ -1,3 +1,5 @@
+import 'package:grid_test/src/screens/ar_screen.dart';
+
 import 'src/screens/grid_page.dart';
 import 'src/screens/first_page.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,8 @@ class RouteGenerator {
           return const FirstPage();
         case '/grid':
           return const GridPage();
+        case '/ar':
+          return const ARScreen();
         default:
           return const FlowScreen();
       }

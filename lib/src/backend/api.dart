@@ -4,12 +4,29 @@ import 'dart:convert';
 import 'package:http/http.dart';
 import '../helpers/helper.dart';
 import '../models/some_item.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:global_configuration/global_configuration.dart';
 
 GlobalConfiguration? gc;
 final httpClient = HttpClient();
 ValueNotifier<List<int>?> bytes = ValueNotifier(null);
+
+Iterable<int> getNumbers(int number) sync* {
+  log('generator started');
+  for (int i = 1; i < number + 1; i++) {
+    yield i;
+  }
+  log('generator ended');
+}
+
+Iterable<int> getNumbersRecursive(int number) sync* {
+  log('generator $number started');
+  if (number > 0) {
+    yield* getNumbersRecursive(number - 1);
+  }
+  yield number;
+  log('generator $number ended');
+}
 
 Stream<int> getValues(int seconds) async* {
   final rand = Random(0);
@@ -66,4 +83,30 @@ Future<List<SomeItem>> obtainData() async {
     client.close();
     rethrow;
   }
+}
+
+Future<String> downloadFile(String url, String fileName, String dir) async {
+  HttpClient httpClient = HttpClient();
+  File file;
+  String filePath = '';
+  String myUrl = '';
+  try {
+    myUrl = '$url/$fileName';
+    final request = await httpClient.getUrl(Uri.parse(myUrl));
+    final response = await request.close();
+    if (response.statusCode == 200) {
+      final bytes = await consolidateHttpClientResponseBytes(response);
+      filePath = '$dir/$fileName';
+      file = File(filePath);
+      final byteFile = await file.writeAsBytes(bytes);
+      log(byteFile.path);
+    } else {
+      filePath = 'Error code: ${response.statusCode}';
+    }
+  } catch (e) {
+    log(e);
+    filePath = 'Can not fetch url';
+  }
+
+  return filePath;
 }

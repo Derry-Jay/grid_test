@@ -23,13 +23,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  qr_code_scanner: ^0.6.1
+  qr_code_scanner: ^1.0.0
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   url_launcher: ^6.0.9
   global_configuration: ^2.0.0-nullsafety.1
-  flutter_cart: ^0.0.6
+  flutter_cart: ^0.0.7
   shared_preferences: ^2.0.6
   stack_trace: ^1.10.0
   flutter_spinkit: ^5.0.0
@@ -37,13 +37,21 @@ dependencies:
   enum_to_string: ^2.0.1
   scoped_model: ^2.0.0-nullsafety.0
   http: ^0.13.3
-  flutter_bloc: ^7.0.1
+  flutter_bloc: ^8.0.1
   rxdart: ^0.27.1
   intl: ^0.17.0
   multi_value_listenable_builder: ^0.0.2
   connectivity_plus: ^2.3.0
   path_provider: ^2.0.10
   pull_to_refresh: ^2.0.0
+  vector_math: ^2.1.2
+  arkit_plugin: ^1.0.5
+  google_maps_flutter: ^2.1.8
+  geolocator: ^9.0.1
+  screenshot: ^1.2.3
+  location: ^4.4.0
+  flutter_uxcam: ^2.1.1
+  flutter_compass: ^0.7.0
 
 dev_dependencies:
   flutter_test:

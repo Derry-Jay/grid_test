@@ -16,6 +16,20 @@ class FirstPageState extends State<FirstPage> {
     return Text(value.data.toString());
   }
 
+  Widget mapItem(int i) {
+    return Container(
+      width: hp.width / (i * 2),
+      height: hp.height / i,
+      color: hp.theme.dividerColor,
+      // padding: const EdgeInsets.only(top: 20, bottom: 15, left: 25, right: 20),
+      child: Center(
+        child: Text(i.toString(),
+            style:
+                TextStyle(color: hp.theme.toggleableActiveColor, fontSize: 20)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,45 +112,12 @@ class FirstPageState extends State<FirstPage> {
                       child: StreamBuilder<int>(
                           builder: valueBuilder,
                           stream: getValues(2),
-                          initialData: 0))
-                  // Row(
-                  //     mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  //     children: [
-                  //       Container(
-                  //         width: 225.0,
-                  //         height: 60.0,
-                  //         color: hp.theme.dividerColor,
-                  //         padding: const EdgeInsets.only(
-                  //             top: 20, bottom: 15, left: 25, right: 20),
-                  //         child: Text('Delivery Date',
-                  //             style: TextStyle(
-                  //                 color: hp.theme.secondaryHeaderColor,
-                  //                 fontSize: 20)),
-                  //       ),
-                  //       Container(
-                  //         width: 225.0,
-                  //         height: 60.0,
-                  //         color: hp.theme.dividerColor,
-                  //         padding: const EdgeInsets.only(
-                  //             top: 20, bottom: 15, left: 25, right: 20),
-                  //         child: Text('Delivery ID',
-                  //             style: TextStyle(
-                  //                 color: hp.theme.secondaryHeaderColor,
-                  //                 fontSize: 20)),
-                  //       ),
-                  //       Container(
-                  //         width: 225.0,
-                  //         height: 60.0,
-                  //         color: hp.theme.dividerColor,
-                  //         padding: const EdgeInsets.only(
-                  //             top: 20, bottom: 15, left: 25, right: 20),
-                  //         child: Text('Customer',
-                  //             style: TextStyle(
-                  //                 color: hp.theme.secondaryHeaderColor,
-                  //                 fontSize: 20)),
-                  //       ),
-                  //     ],
-                  //   ),
+                          initialData: 0)),
+                  Expanded(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children:
+                              getNumbers(3).map<Widget>(mapItem).toList()))
                 ],
               ))),
       bottomNavigationBar: SizedBox(width: hp.width, height: 50),

@@ -33,8 +33,8 @@ class ItemWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Text(item.date),
-                  Text(item.amount),
-                  Text('${item.cate} ${item.type}')
+                  Text(item.cost.toString()),
+                  // Text('${item.cate} ${item.type}')
                 ],
               )
             ],

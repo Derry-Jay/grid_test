@@ -1,12 +1,8 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
-import 'package:grid_test/src/helpers/helper.dart';
-import 'package:grid_test/src/screens/first_page.dart';
-import 'package:grid_test/src/screens/grid_page.dart';
-import 'package:grid_test/src/models/scope_model_wrapper.dart';
-import 'package:grid_test/src/screens/products_page.dart';
-// import 'package:grid_test/src/screens/qr_scan_screen.dart';
-import 'package:grid_test/src/screens/flow_menu_screen.dart';
-import 'package:grid_test/src/screens/table_screen.dart';
+import '../models/scope_model_wrapper.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.model}) : super(key: key);
@@ -30,6 +26,10 @@ class MyHomePageState extends State<MyHomePage> {
   Helper get hp => Helper.of(context);
 
   void _incrementCounter() {
+    hp.invokeVCB(() {
+      log(haversineDistance(
+          const LatLng(51.5, 0.12), const LatLng(48.84, 2.35)));
+    });
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -57,12 +57,7 @@ class MyHomePageState extends State<MyHomePage> {
           actions: [
             IconButton(
                 onPressed: () async {
-                  final p = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const FirstPage(),
-                      ));
-                  log(p);
+                  hp.goTo('/first');
                 },
                 icon: const Icon(Icons.arrow_forward_ios))
           ]),
@@ -90,23 +85,11 @@ class MyHomePageState extends State<MyHomePage> {
               child: const Text(
                 'You have pushed the button this many times:',
               ),
-              onTap: () async {
-                final p = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const FlowScreen(),
-                    ));
-                log(p);
-              },
+              onTap: () async {},
             ),
             SelectableText('$_counter',
-                style: Theme.of(context).textTheme.headline4, onTap: () async {
-              final p = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ProductsPage()));
-              log(p);
-            }),
+                style: Theme.of(context).textTheme.headline4,
+                onTap: () async {}),
             ElevatedButton(
                 onPressed: () async {
                   widget.model.changeDirection();
@@ -114,23 +97,12 @@ class MyHomePageState extends State<MyHomePage> {
                 child: Text(hp.loc.details)),
             GestureDetector(
                 child: Text(hp.loc.you_must_signin_to_access_to_this_section),
-                onTap: () async {
-                  final p = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const GridPage()));
-                  log(p);
-                }),
+                onTap: () async {}),
             ElevatedButton(
-              onPressed: () async {
-                final p = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (BuildContext context) => const HomeScreen()));
-                log(p);
-              },
-              child: const Text('2nd Task'),
-            )
+                onPressed: () async {
+                  hp.goTo('/ar');
+                },
+                child: const Text('ARKit'))
           ],
         ),
       ),
