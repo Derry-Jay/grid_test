@@ -4,7 +4,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:arkit_plugin/arkit_plugin.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:grid_test/route_generator.dart';
 import 'package:location/location.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter_uxcam/flutter_uxcam.dart';
@@ -43,13 +45,35 @@ final dF = isAndroid || isFuchsia || isLinux || isWindows;
 
 final isPortable = isAndroid || isIOS;
 
+final assetImagePath = gc?.getValue<String>('asset_image_path') ?? '';
+
 ARKitController? arkitController;
 
 ScreenshotController con = ScreenshotController();
 
 Location location = Location();
 
-final uxc = FlutterUxConfig(userAppKey: '');
+FlutterUxConfig uxc = FlutterUxConfig(userAppKey: '');
+
+DateTime? currentBackPressTime;
+
+String imgBaseUrl = '';
+
+Connectivity conn = Connectivity();
+
+WidgetsBinding? wb;
+
+Location place = Location();
+
+RouteGenerator rg = RouteGenerator();
+
+LocationPermission? perm;
+
+PermissionStatus? status;
+
+GoogleMapController? mapCon;
+
+Completer<GoogleMapController> completer = Completer<GoogleMapController>();
 
 enum LoaderType {
   normal,
@@ -82,8 +106,6 @@ enum ButtonType { raised, text, border }
 
 enum AlertType { normal, cupertino }
 
-WidgetsBinding? wb;
-
 List<Stream<Barcode>> css = <Stream<Barcode>>[];
 
 List<StreamSubscription<Barcode>> scs = <StreamSubscription<Barcode>>[];
@@ -109,8 +131,39 @@ void lockScreenRotation() async {
   ]);
 }
 
-bool Function(Route<dynamic>) getRoutePredicate(String routeName) {
-  return ModalRoute.withName(routeName);
+void showStatusBar() async {
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+      overlays: [SystemUiOverlay.top]);
+}
+
+void invokeVCB(VoidCallback vcb) {
+  log('object');
+  vcb.call();
+  log('object2');
+}
+
+void getLocationPermission() async {
+  final locPerm = await location.hasPermission();
+  status = locPerm == PermissionStatus.granted ||
+          locPerm == PermissionStatus.grantedLimited
+      ? locPerm
+      : await location.requestPermission();
+  if (!(status == PermissionStatus.granted ||
+      status == PermissionStatus.grantedLimited)) {
+    getLocationPermission();
+  }
+}
+
+void getGPSPermission() async {
+  final getPerm = await Geolocator.checkPermission();
+  perm = getPerm == LocationPermission.always ||
+          getPerm == LocationPermission.whileInUse
+      ? getPerm
+      : (await Geolocator.requestPermission());
+  if (!(perm == LocationPermission.always ||
+      perm == LocationPermission.whileInUse)) {
+    getGPSPermission();
+  }
 }
 
 void hideLoader(Duration time, {LoaderType? type}) {
@@ -121,6 +174,10 @@ void hideLoader(Duration time, {LoaderType? type}) {
       log(e);
     }
   }).cancel();
+}
+
+bool Function(Route<dynamic>) getRoutePredicate(String routeName) {
+  return ModalRoute.withName(routeName);
 }
 
 OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
@@ -145,6 +202,23 @@ OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
   return OverlayEntry(builder: loaderBuilder);
 }
 
+List<String> getFirstAndLastName(String name) {
+  List<String> ls = [];
+  if (name.isNotEmpty) {
+    ls.add(name.trim().split(' ')[0]);
+    ls.add(name.trim().split(' ')[name.trim().split(' ').length - 1]);
+  }
+  return ls;
+}
+
+String putDateTimeToString(DateTime element, String sep) {
+  int ds = (element.millisecond * 1000) + element.microsecond;
+  String str = element.year.toString();
+  str +=
+      ('$sep${element.month}$sep${element.day}|${element.hour}:${element.minute}:${element.second}.$ds');
+  return str;
+}
+
 Widget errorBuilder(BuildContext context, Object object, StackTrace? trace) {
   final hpe = Helper.of(context);
   log(object);
@@ -154,36 +228,36 @@ Widget errorBuilder(BuildContext context, Object object, StackTrace? trace) {
 }
 
 Widget getPageLoader(Size size) {
-  return Image.asset('assets/images/loading_trend.gif',
+  return Image.asset('${assetImagePath}loading_trend.gif',
       width: size.width, fit: BoxFit.fill, height: size.height);
 }
 
 Widget getPageLoader1(Size size) {
-  return Image.asset('assets/images/loader1.gif',
+  return Image.asset('${assetImagePath}loader1.gif',
       width: size.width, fit: BoxFit.fill, height: size.height);
 }
 
 Widget getPlaceHolder(BuildContext context, String url) {
   final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/loading.gif',
+  return Image.asset('${assetImagePath}loading.gif',
       height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
 }
 
 Widget getPlaceHolderNoImage(BuildContext context, String url) {
   final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/noImage.png',
+  return Image.asset('${assetImagePath}noImage.png',
       height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
 }
 
 Widget getErrorWidgetNoImage(BuildContext context, String url, dynamic error) {
   final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/noImage.png',
+  return Image.asset('${assetImagePath}noImage.png',
       height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
 }
 
 Widget getErrorWidget(BuildContext context, String url, dynamic error) {
   final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/noImage.png',
+  return Image.asset('${assetImagePath}noImage.png',
       height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
 }
 
@@ -481,9 +555,6 @@ String putDateToString(DateTime dt) => '${dt.month}/${dt.year}';
 
 class Helper extends ChangeNotifier {
   late BuildContext buildContext;
-  DateTime? currentBackPressTime;
-  String imgBaseUrl = '';
-  Connectivity con = Connectivity();
   S get loc => S.of(buildContext);
   ThemeData get theme => Theme.of(buildContext);
   OverlayState? get ol => Overlay.of(buildContext);
@@ -511,11 +582,6 @@ class Helper extends ChangeNotifier {
   bool get isTablet => isPortable && size.shortestSide >= 600;
   Helper.of(BuildContext context) {
     buildContext = context;
-  }
-
-  void showStatusBar() async {
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-        overlays: [SystemUiOverlay.top]);
   }
 
   String trans(String text) {
@@ -634,12 +700,6 @@ class Helper extends ChangeNotifier {
     goBack();
   }
 
-  void invokeVCB(VoidCallback vcb) {
-    log('object');
-    vcb.call();
-    log('object2');
-  }
-
   void addLoader(Duration time, {LoaderType? type}) {
     if (ol?.mounted ?? false) {
       ol?.insert(overlayLoader(time, type: type));
@@ -647,7 +707,7 @@ class Helper extends ChangeNotifier {
   }
 
   void getConnectStatus({VoidCallback? vcb}) async {
-    final connectivityResult = await con.checkConnectivity();
+    final connectivityResult = await conn.checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       final f1 = await revealDialogBox([
         'Try Again'
@@ -985,15 +1045,6 @@ class Helper extends ChangeNotifier {
         : null;
   }
 
-  List<String> getFirstAndLastName(String name) {
-    List<String> ls = [];
-    if (name != '') {
-      ls.add(name.trim().split(' ')[0]);
-      ls.add(name.trim().split(' ')[name.trim().split(' ').length - 1]);
-    }
-    return ls;
-  }
-
   String? validatePhoneNumber(String? phone) {
     return (phone != null && phone.length == 10 && int.tryParse(phone) != null
         ? null
@@ -1025,12 +1076,4 @@ class Helper extends ChangeNotifier {
 
   String? validateName(String? value) =>
       value != null || value!.isEmpty ? loc.not_a_valid_full_name : null;
-
-  String putDateTimeToString(DateTime element, String sep) {
-    int ds = (element.millisecond * 1000) + element.microsecond;
-    String str = element.year.toString();
-    str +=
-        ('$sep${element.month}$sep${element.day}|${element.hour}:${element.minute}:${element.second}.$ds');
-    return str;
-  }
 }

@@ -19,8 +19,9 @@ class MyPage extends StatelessWidget {
                       ? (code.data?.rawBytes ?? <int>[])
                       : <int>[]),
                   errorBuilder: errorBuilder),
-              Text(
-                  code.hasData && !code.hasError ? (code.data?.code ?? '') : '')
+              Text(code.hasData && !code.hasError
+                  ? (code.data?.code ?? 'Error')
+                  : 'Error')
             ]));
       } catch (e) {
         log(e);

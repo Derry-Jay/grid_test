@@ -1,11 +1,11 @@
 import 'dart:io';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:arkit_plugin/arkit_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:grid_test/src/helpers/helper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:vector_math/vector_math_64.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class ARScreen extends StatefulWidget {
   const ARScreen({Key? key}) : super(key: key);
@@ -39,47 +39,6 @@ class ARScreenState extends State<ARScreen> {
     }
   ];
   Helper get hp => Helper.of(context);
-
-  // void placedCordiantes() async {
-  //   final currentposition = await Geolocator.getCurrentPosition();
-  //   final point = LatLng(currentposition.latitude, currentposition.longitude);
-  //   log(currentposition);
-  //   log('currentPosition');
-  //   for (var i = 0; i < listsData.length; i++) {
-  //     final distance = Geolocator.distanceBetween(
-  //             point.latitude,
-  //             point.longitude,
-  //             listsData[i]['latitude'],
-  //             listsData[i]['longitude']) /
-  //         1000;
-  //     log(distance);
-
-  //     if (distance < 10) {
-  //       final capturedImage = await con.captureFromWidget(planeCreation(
-  //           listsData[i]['name'],
-  //           distance.toStringAsFixed(2),
-  //           listsData[i]['url']));
-  //       final directory = await getApplicationDocumentsDirectory();
-  //       final pathOfImage =
-  //           await File('${directory.path}/capturedImage.png').create();
-  //       final bytes = capturedImage.buffer.asUint8List();
-  //       final file = await pathOfImage.writeAsBytes(bytes);
-  //       log('${directory.path}/capturedImage.png');
-  //       log(file == pathOfImage);
-  //       final materialCard = ARKitMaterial(
-  //         lightingModelName: ARKitLightingModel.lambert,
-  //         diffuse: ARKitMaterialProperty.image(
-  //             '${directory.path}/capturedImage.png'),
-  //       );
-  //       final image =
-  //           ARKitPlane(height: 0.1, width: 0.4, materials: [materialCard]);
-  //       await arkitController.add(ARKitNode(
-  //           geometry: image,
-  //           eulerAngles: Vector3.zero(),
-  //           position: Vector3(0, 0, listsData[i]['cordinate'])));
-  //     }
-  //   }
-  // }
 
   void onARKitViewCreated(ARKitController arkitController) async {
     try {

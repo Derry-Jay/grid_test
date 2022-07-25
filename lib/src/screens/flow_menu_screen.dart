@@ -76,8 +76,7 @@ class _FlowMenuState extends State<FlowMenu>
   Widget build(BuildContext context) {
     return Flow(
       delegate: FlowMenuDelegate(menuAnimation: menuAnimation),
-      children:
-          menuItems.map<Widget>((IconData icon) => flowMenuItem(icon)).toList(),
+      children: menuItems.map<Widget>(flowMenuItem).toList(),
     );
   }
 }

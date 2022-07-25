@@ -1,6 +1,5 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:grid_test/route_generator.dart';
-import 'package:grid_test/src/widgets/empty_widget.dart';
+import 'package:flutter/foundation.dart';
+
 import 'generated/l10n.dart';
 import 'src/backend/api.dart';
 import 'src/helpers/helper.dart';
@@ -8,6 +7,8 @@ import 'src/screens/home_page.dart';
 import 'package:flutter/material.dart';
 import 'src/models/scope_model_wrapper.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:grid_test/src/widgets/empty_widget.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -16,6 +17,8 @@ void main() async {
     wb = WidgetsFlutterBinding.ensureInitialized();
     gc = await GlobalConfiguration().loadFromAsset('configurations');
     if (!(wb?.buildOwner?.debugBuilding ?? true)) {
+      // getLocationPermission();
+      getGPSPermission();
       log('####################');
       log(gc?.getValue('page') == gc?.getValue('total'));
       log(gc?.getValue('records'));
@@ -31,7 +34,7 @@ class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   Widget appBuilder(BuildContext context, Widget? child, AppModel model) {
-    final hpa = Helper.of(context);
+    // final hpa = Helper.of(context);
     Widget rootBuilder(
         BuildContext context, AsyncSnapshot<ConnectivityResult> result) {
       final hpr = Helper.of(context);
@@ -49,10 +52,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'Flutter Demo',
         locale: model.appLocal,
+        onGenerateRoute: rg.generateRoute,
+        debugShowCheckedModeBanner: kDebugMode,
         supportedLocales: S.delegate.supportedLocales,
-        onGenerateRoute: RouteGenerator().generateRoute,
         home: StreamBuilder<ConnectivityResult>(
-            builder: rootBuilder, stream: hpa.con.onConnectivityChanged),
+            builder: rootBuilder, stream: conn.onConnectivityChanged),
         theme: ThemeData(
             // This is the theme of your application.
             //

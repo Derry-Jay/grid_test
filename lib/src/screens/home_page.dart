@@ -26,7 +26,7 @@ class MyHomePageState extends State<MyHomePage> {
   Helper get hp => Helper.of(context);
 
   void _incrementCounter() {
-    hp.invokeVCB(() {
+    invokeVCB(() {
       log(haversineDistance(
           const LatLng(51.5, 0.12), const LatLng(48.84, 2.35)));
     });
@@ -85,7 +85,9 @@ class MyHomePageState extends State<MyHomePage> {
               child: const Text(
                 'You have pushed the button this many times:',
               ),
-              onTap: () async {},
+              onTap: () async {
+                hp.goTo('/map');
+              },
             ),
             SelectableText('$_counter',
                 style: Theme.of(context).textTheme.headline4,
