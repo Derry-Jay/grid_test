@@ -1,4 +1,5 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:grid_test/src/backend/api.dart';
 
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class MyHomePage extends StatefulWidget {
 
 class MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  Map<String, dynamic>? val, map;
   Helper get hp => Helper.of(context);
 
   void _incrementCounter() {
@@ -30,14 +32,30 @@ class MyHomePageState extends State<MyHomePage> {
       log(haversineDistance(
           const LatLng(51.5, 0.12), const LatLng(48.84, 2.35)));
     });
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+    getAppVersion();
+    mounted
+        ? setState(() {
+            // This call to setState tells the Flutter framework that something has
+            // changed in this State, which causes it to rerun the build method below
+            // so that the display can reflect the updated values. If we changed
+            // _counter without calling setState(), then the build method would not be
+            // called again, and so nothing would appear to happen.
+            _counter++;
+          })
+        : log('object');
+  }
+
+  void setData() async {
+    // val = await getMap();
+    map = await obtainMap();
+    mounted ? setState(() {}) : log('unmounted');
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    setData();
   }
 
   @override
@@ -97,9 +115,11 @@ class MyHomePageState extends State<MyHomePage> {
                   widget.model.changeDirection();
                 },
                 child: Text(hp.loc.details)),
-            GestureDetector(
-                child: Text(hp.loc.you_must_signin_to_access_to_this_section),
-                onTap: () async {}),
+            SelectableText(hp.loc.you_must_signin_to_access_to_this_section,
+                onTap: () async {
+              log(val);
+              log(map);
+            }),
             ElevatedButton(
                 onPressed: () async {
                   hp.goTo('/ar');

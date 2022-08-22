@@ -3,11 +3,13 @@ import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:arkit_plugin/arkit_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:grid_test/route_generator.dart';
 import 'package:location/location.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter_uxcam/flutter_uxcam.dart';
 import '../backend/api.dart';
@@ -53,7 +55,7 @@ ScreenshotController con = ScreenshotController();
 
 Location location = Location();
 
-FlutterUxConfig uxc = FlutterUxConfig(userAppKey: '');
+FlutterUxConfig uxc = FlutterUxConfig(userAppKey: '6fkwpg17zc9ma8e');
 
 DateTime? currentBackPressTime;
 
@@ -75,6 +77,8 @@ GoogleMapController? mapCon;
 
 Completer<GoogleMapController> completer = Completer<GoogleMapController>();
 
+DeviceInfoPlugin dip = DeviceInfoPlugin();
+
 enum LoaderType {
   normal,
   rotatingPlain,
@@ -92,14 +96,19 @@ enum LoaderType {
   rotatingCircle,
   foldingCube,
   pumpingHeart,
-  dualRing,
   hourGlass,
   pouringHourGlass,
+  pouringHourGlassRefined,
   fadingGrid,
   ring,
   ripple,
   spinningCircle,
-  squareCircle
+  spinningLines,
+  squareCircle,
+  dualRing,
+  pianoWave,
+  dancingSquare,
+  threeInOut
 }
 
 enum ButtonType { raised, text, border }
@@ -174,6 +183,11 @@ void hideLoader(Duration time, {LoaderType? type}) {
       log(e);
     }
   }).cancel();
+}
+
+void getAppVersion() async {
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  log(packageInfo.version);
 }
 
 bool Function(Route<dynamic>) getRoutePredicate(String routeName) {
@@ -422,10 +436,15 @@ Uri getUri(String path) {
 }
 
 Color getColorFromHex(String hex) {
-  if (hex.contains('#')) {
-    return Color(int.parse(hex.replaceAll('#', '0xFF')));
-  } else {
-    return Color(int.parse('0xFF$hex'));
+  try {
+    if (hex.contains('#')) {
+      return Color(int.tryParse(hex.replaceAll('#', '0xFF')) ?? 0x00000000);
+    } else {
+      return Color(int.tryParse('0xFF$hex') ?? 0x00000000);
+    }
+  } catch (e) {
+    log(e);
+    return const Color(0x00000000);
   }
 }
 
@@ -469,7 +488,6 @@ AlignmentDirectional getAlignmentDirectional(String alignmentDirectional) {
     case 'bottom_center':
       return AlignmentDirectional.bottomCenter;
     case 'bottom_end':
-      return AlignmentDirectional.bottomEnd;
     default:
       return AlignmentDirectional.bottomEnd;
   }

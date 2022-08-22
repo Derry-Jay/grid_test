@@ -28,26 +28,27 @@ class MapWidget extends StatelessWidget {
   }
 
   void cameraMovement(CameraPosition position) async {
-    await mapCon?.animateCamera(CameraUpdate.newCameraPosition(position));
+    log(position.target);
   }
 
   Widget mapBuilder(BuildContext context, AsyncSnapshot<LocationData> region) {
     log(region.data);
     try {
-      return 
-      // region.hasData && !region.hasError? 
-          GoogleMap(
+      return region.hasData && !region.hasError
+          ? GoogleMap(
               trafficEnabled: true,
               myLocationEnabled: true,
               onMapCreated: onMapCreated,
+              onCameraMove: cameraMovement,
               initialCameraPosition: CameraPosition(
                   target: LatLng(region.data?.latitude ?? 0.0,
                       region.data?.longitude ?? 0.0)))
-          // : const EmptyWidget()
-          ;
+          : SelectableText(region.hasError
+              ? (region.error?.toString() ?? 'Unknown Error')
+              : (!region.hasData ? 'No Data' : 'Unknown Error'));
     } catch (e) {
       log(e);
-      return const EmptyWidget();
+      return SelectableText(e.toString());
     }
   }
 

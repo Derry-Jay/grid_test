@@ -43,15 +43,17 @@ dependencies:
   multi_value_listenable_builder: ^0.0.2
   connectivity_plus: ^2.3.0
   path_provider: ^2.0.10
-  pull_to_refresh: ^2.0.0
   vector_math: ^2.1.2
   arkit_plugin: ^1.0.5
   google_maps_flutter: ^2.1.8
   geolocator: ^9.0.1
-  screenshot: ^1.2.3
   location: ^4.4.0
+  pull_to_refresh: ^2.0.0
+  screenshot: ^1.2.3
   flutter_uxcam: ^2.1.1
   flutter_compass: ^0.7.0
+  package_info_plus: ^1.4.2
+  device_info_plus: ^4.1.2
 
 dev_dependencies:
   flutter_test:

@@ -13,7 +13,7 @@ ValueNotifier<List<int>?> bytes = ValueNotifier(null);
 
 Iterable<int> getNumbers(int number) sync* {
   log('generator started');
-  for (int i = 1; i < number + 1; i++) {
+  for (int i = 1; i <= number; i++) {
     yield i;
   }
   log('generator ended');
@@ -109,4 +109,37 @@ Future<String> downloadFile(String url, String fileName, String dir) async {
   }
 
   return filePath;
+}
+
+Future<Map<String, dynamic>> getMap() async {
+  try {
+    final request = await httpClient
+        .getUrl(Uri.tryParse('http://127.0.0.1:8000/') ?? Uri());
+    final response = await request.close();
+    final resStr = await response.transform(utf8.decoder).join();
+    log(resStr);
+    return response.statusCode == 200
+        ? json.decode(resStr) as Map<String, dynamic>
+        : <String, dynamic>{};
+  } catch (e) {
+    log(e);
+    return <String, dynamic>{};
+  }
+}
+
+Future<Map<String, dynamic>> obtainMap() async {
+  try {
+    final request = await httpClient
+        .postUrl(Uri.tryParse('http://127.0.0.1:8000/values') ?? Uri());
+    request.write(jsonEncode({'limit': 50}));
+    final response = await request.close();
+    final resStr = await response.transform(utf8.decoder).join();
+    log(resStr);
+    return response.statusCode == 200
+        ? json.decode(resStr) as Map<String, dynamic>
+        : <String, dynamic>{};
+  } catch (e) {
+    log(e);
+    return <String, dynamic>{};
+  }
 }

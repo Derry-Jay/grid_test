@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-
 import 'generated/l10n.dart';
 import 'src/backend/api.dart';
 import 'src/helpers/helper.dart';

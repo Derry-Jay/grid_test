@@ -1,15 +1,17 @@
 import 'dart:async';
-import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../helpers/helper.dart';
 
 class CircularLoader extends StatefulWidget {
   final Color color;
   final Duration duration;
-  final double? heightFactor, widthFactor;
   final LoaderType? loaderType;
+  final double? heightFactor, widthFactor, sizeFactor;
+
   const CircularLoader(
       {Key? key,
+      this.sizeFactor,
       this.loaderType,
       this.widthFactor,
       this.heightFactor,
@@ -25,35 +27,40 @@ class CircularLoaderState extends State<CircularLoader>
     with SingleTickerProviderStateMixin {
   Animation<double>? animation;
   AnimationController? animationController;
-  Duration timing = const Duration(milliseconds: 600);
   Helper get hp => Helper.of(context);
+  double get length =>
+      hp.radius / (widget.sizeFactor ?? (hp.factor * 8.388608));
+  // Timer? tm;
 
-  void listenToStatus(AnimationStatus status) {
-    log(status.name);
+  void refreshIfMounted() {
+    if (mounted) setState(() {});
+  }
+
+  void moveForwardIfMounted() async {
+    if (mounted && animationController != null) {
+      await animationController?.forward();
+    }
   }
 
   void getData() {
     animationController =
         AnimationController(duration: widget.duration, vsync: this);
-    CurvedAnimation curve = CurvedAnimation(
-        parent: animationController ??
-            AnimationController(duration: widget.duration, vsync: this),
-        curve: Curves.easeOut);
+    CurvedAnimation curve =
+        CurvedAnimation(parent: animationController!, curve: Curves.easeOut);
     animation = Tween<double>(
             begin: hp.height / (widget.heightFactor ?? hp.factor), end: 0)
         .animate(curve)
-      ..addStatusListener(listenToStatus)
-      ..addListener(reloadIfMounted);
+      ..drive(AlignmentGeometryTween())
+      ..addListener(refreshIfMounted)
+      ..addStatusListener(listenAnimationStatus);
   }
 
-  void goFrontIfMounted() async {
-    if (mounted && animationController != null) {
-      await animationController!.forward();
+  void listenAnimationStatus(AnimationStatus status) {
+    if ((status == AnimationStatus.dismissed ||
+            status == AnimationStatus.completed) &&
+        mounted) {
+      dispose();
     }
-  }
-
-  void reloadIfMounted() {
-    if (mounted) setState(() {});
   }
 
   void assignState() async {
@@ -61,94 +68,184 @@ class CircularLoaderState extends State<CircularLoader>
   }
 
   @override
-  void initState() {
-    super.initState();
-    assignState();
-  }
-
-  @override
-  void dispose() {
-    if (animationController != null) {
-      animationController!.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final opacity = animation == null
+    final opacity = (animation?.value ?? 101.0) > 100.0
         ? 1.0
-        : (animation!.value > 100.0 ? 1.0 : animation!.value / 100);
+        : (animation?.value ?? 100.0) / 100;
     Widget lc;
     switch (widget.loaderType) {
       case LoaderType.chasingDots:
-        lc = SpinKitChasingDots(color: widget.color);
+        lc = SpinKitChasingDots(
+            color: widget.color, duration: widget.duration, size: length);
         break;
       case LoaderType.circle:
-        lc = SpinKitCircle(color: widget.color);
+        lc = SpinKitCircle(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.ring:
-        lc = SpinKitRing(color: widget.color);
+        lc = SpinKitRing(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.cubeGrid:
-        lc = SpinKitCubeGrid(color: widget.color);
+        lc = SpinKitCubeGrid(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
+        break;
+      case LoaderType.dancingSquare:
+        lc = SpinKitDancingSquare(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.doubleBounce:
-        lc = SpinKitDoubleBounce(color: widget.color);
+        lc = SpinKitDoubleBounce(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.dualRing:
-        lc = SpinKitDualRing(color: widget.color);
+        lc = SpinKitDualRing(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.fadingCircle:
-        lc = SpinKitFadingCircle(color: widget.color);
+        lc = SpinKitFadingCircle(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.fadingCube:
-        lc = SpinKitFadingCube(color: widget.color);
+        lc = SpinKitFadingCube(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.fadingFour:
-        lc = SpinKitFadingFour(color: widget.color);
+        lc = SpinKitFadingFour(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.fadingGrid:
-        lc = SpinKitFadingGrid(color: widget.color);
+        lc = SpinKitFadingGrid(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.foldingCube:
-        lc = SpinKitFoldingCube(color: widget.color);
+        lc = SpinKitFoldingCube(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.hourGlass:
-        lc = SpinKitHourGlass(color: widget.color);
+        lc = SpinKitHourGlass(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.pouringHourGlass:
-        lc = SpinKitPouringHourGlass(color: widget.color);
+        lc = SpinKitPouringHourGlass(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
+        break;
+      case LoaderType.pouringHourGlassRefined:
+        lc = SpinKitPouringHourGlassRefined(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.pulse:
-        lc = SpinKitPulse(color: widget.color);
+        lc = SpinKitPulse(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.pumpingHeart:
-        lc = SpinKitPumpingHeart(color: widget.color);
+        lc = SpinKitPumpingHeart(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.ripple:
-        lc = SpinKitRipple(color: widget.color);
+        lc = SpinKitRipple(
+            color: widget.color, duration: widget.duration, size: length);
         break;
       case LoaderType.rotatingCircle:
-        lc = SpinKitRotatingCircle(color: widget.color);
+        lc = SpinKitRotatingCircle(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.rotatingPlain:
-        lc = SpinKitRotatingPlain(color: widget.color);
+        lc = SpinKitRotatingPlain(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.spinningCircle:
-        lc = SpinKitSpinningCircle(color: widget.color);
+        lc = SpinKitSpinningCircle(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
+        break;
+      case LoaderType.spinningLines:
+        lc = SpinKitSpinningLines(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.squareCircle:
-        lc = SpinKitSquareCircle(color: widget.color);
+        lc = SpinKitSquareCircle(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.threeBounce:
-        lc = SpinKitThreeBounce(color: widget.color);
+        lc = SpinKitThreeBounce(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.wanderingCubes:
-        lc = SpinKitWanderingCubes(color: widget.color);
+        lc = SpinKitWanderingCubes(
+            color: widget.color, duration: widget.duration, size: length);
         break;
       case LoaderType.wave:
-        lc = SpinKitWave(color: widget.color);
+        lc = SpinKitWave(
+            color: widget.color,
+            duration: widget.duration,
+            controller: animationController,
+            size: length);
         break;
       case LoaderType.normal:
       default:
@@ -162,5 +259,33 @@ class CircularLoaderState extends State<CircularLoader>
             heightFactor: widget.heightFactor,
             widthFactor: widget.widthFactor,
             child: lc));
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    moveForwardIfMounted();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    assignState();
+  }
+
+  @override
+  void dispose() {
+    log(animationController);
+    if (animationController != null && mounted) {
+      animationController?.dispose();
+    }
+    // if (tm != null) tm?.cancel();
+    log(animation);
+    if (animation != null && mounted) {
+      animation?.removeListener(refreshIfMounted);
+      animation?.removeStatusListener(listenAnimationStatus);
+    }
+    super.dispose();
   }
 }
