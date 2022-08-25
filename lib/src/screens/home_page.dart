@@ -107,9 +107,10 @@ class MyHomePageState extends State<MyHomePage> {
                 hp.goTo('/map');
               },
             ),
-            SelectableText('$_counter',
-                style: Theme.of(context).textTheme.headline4,
-                onTap: () async {}),
+            SelectableText('$_counter', style: hp.textTheme.headline4,
+                onTap: () async {
+              hp.goTo('/home');
+            }),
             ElevatedButton(
                 onPressed: () async {
                   widget.model.changeDirection();

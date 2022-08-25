@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
+
 import '../backend/api.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
-import '../widgets/some_item_list_widget.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({Key? key}) : super(key: key);
@@ -12,6 +13,15 @@ class FirstPage extends StatefulWidget {
 
 class FirstPageState extends State<FirstPage> {
   Helper get hp => Helper.of(context);
+  double turns = 0;
+
+  void turnBuilder() {
+    mounted
+        ? setState(() {
+            turns += (1 / 8);
+          })
+        : doNothing();
+  }
   Widget valueBuilder(BuildContext context, AsyncSnapshot<int> value) {
     return Text(value.data.toString());
   }
@@ -32,6 +42,17 @@ class FirstPageState extends State<FirstPage> {
 
   @override
   Widget build(BuildContext context) {
+    IconData idt = Icons.flip;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        idt = Icons.flip_camera_android;
+        break;
+      case TargetPlatform.iOS:
+        idt = Icons.flip_camera_android;
+        break;
+      default:
+        break;
+    }
     return Scaffold(
       appBar: AppBar(
         // title: Stack(children: [
@@ -106,7 +127,11 @@ class FirstPageState extends State<FirstPage> {
               height: hp.height,
               child: Column(
                 children: <Widget>[
-                  const Expanded(flex: 2, child: SomeItemListWidget()),
+                  AnimatedRotation(
+                      turns: turns,
+                      duration: const Duration(seconds: 1),
+                      child: const FlutterLogo()),
+                  IconButton(onPressed: turnBuilder, icon: Icon(idt)),
                   Flexible(
                       flex: 2,
                       child: StreamBuilder<int>(

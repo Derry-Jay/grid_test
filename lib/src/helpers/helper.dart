@@ -190,6 +190,8 @@ void getAppVersion() async {
   log(packageInfo.version);
 }
 
+void doNothing() {}
+
 bool Function(Route<dynamic>) getRoutePredicate(String routeName) {
   return ModalRoute.withName(routeName);
 }
@@ -577,17 +579,29 @@ class Helper extends ChangeNotifier {
   ThemeData get theme => Theme.of(buildContext);
   OverlayState? get ol => Overlay.of(buildContext);
   NavigatorState get nav => Navigator.of(buildContext);
-  MediaQueryData get dimensions => MediaQuery.of(buildContext);
+  MediaQueryData get dimensions =>
+      MediaQuery.maybeOf(buildContext) ?? MediaQuery.of(buildContext);
   ModalRoute<Object?>? get route => ModalRoute.of(buildContext);
+  AnimatedListState get als =>
+      AnimatedList.maybeOf(buildContext) ?? AnimatedList.of(buildContext);
+  ScaffoldState get sct =>
+      Scaffold.maybeOf(buildContext) ?? Scaffold.of(buildContext);
+  SliverAnimatedListState get slas =>
+      SliverAnimatedList.maybeOf(buildContext) ??
+      SliverAnimatedList.of(buildContext);
+  ScaffoldMessengerState get smcT =>
+      ScaffoldMessenger.maybeOf(buildContext) ??
+      ScaffoldMessenger.of(buildContext);
   Size get size => dimensions.size;
   double get pixelRatio => dimensions.devicePixelRatio;
-  double get textScaleFactor => dimensions.textScaleFactor;
+  double get textScaleFactor =>
+      (MediaQuery.textScaleFactorOf(buildContext) +
+          dimensions.textScaleFactor) /
+      2;
   double get height => size.height;
   double get width => size.width;
   double get aspectRatio => size.aspectRatio;
   double get radius => sqrt(pow(height, 2) + pow(width, 2));
-  ScaffoldState get sct => Scaffold.of(buildContext);
-  ScaffoldMessengerState get smcT => ScaffoldMessenger.of(buildContext);
   State? get st => buildContext.findAncestorStateOfType();
   TextTheme get textTheme => theme.textTheme;
   double get factor => pow(
@@ -749,7 +763,7 @@ class Helper extends ChangeNotifier {
     return revealToast('Please Wait....', length: Toast.LENGTH_LONG);
   }
 
-  Future<bool?> showDialogBox(
+  Future<bool?> appearDialogBox(
       {Widget? title,
       AlertType? type,
       Widget? content,
@@ -945,7 +959,7 @@ class Helper extends ChangeNotifier {
         actionScrollController: actionScrollController);
   }
 
-  Future<T?> appearDialogBox<T>(
+  Future<T?> showDialogBox<T>(
       {Widget? child,
       Widget? title,
       AlertType? type,
@@ -996,19 +1010,23 @@ class Helper extends ChangeNotifier {
       }
     }
 
-    return type == AlertType.cupertino
-        ? showCupertinoDialog<T>(
+    switch (type) {
+      case AlertType.cupertino:
+        return showCupertinoDialog<T>(
             context: buildContext,
             builder: dialogBuilder,
             barrierLabel: barrierLabel,
-            routeSettings: routeSettings,
-            barrierDismissible: dismissive ?? false)
-        : showDialog<T>(
+            barrierDismissible: dismissive ?? false,
+            routeSettings: routeSettings ?? route?.settings);
+      case AlertType.normal:
+      default:
+        return showDialog<T>(
             context: buildContext,
             builder: dialogBuilder,
             barrierLabel: barrierLabel,
-            routeSettings: routeSettings,
-            barrierDismissible: dismissive ?? false);
+            barrierDismissible: dismissive ?? false,
+            routeSettings: routeSettings ?? route?.settings);
+    }
   }
 
   Future<T?> manifestDialogBox<T>(
@@ -1045,7 +1063,7 @@ class Helper extends ChangeNotifier {
     return options.length == actions.length &&
             options.isNotEmpty &&
             actions.isNotEmpty
-        ? await appearDialogBox<T>(
+        ? await showDialogBox<T>(
             type: type,
             dismissive: dismissive,
             titleStyle: titleStyle,

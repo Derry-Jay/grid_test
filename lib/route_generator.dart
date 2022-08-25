@@ -1,5 +1,6 @@
 import 'package:grid_test/src/screens/ar_screen.dart';
 import 'package:grid_test/src/screens/map_screen.dart';
+import 'package:grid_test/src/screens/table_screen.dart';
 
 import 'src/screens/grid_page.dart';
 import 'src/screens/first_page.dart';
@@ -22,6 +23,8 @@ class RouteGenerator {
           return const ARScreen();
         case '/map':
           return const MapScreen();
+        case '/home':
+          return const HomeScreen();
         default:
           return const FlowScreen();
       }
