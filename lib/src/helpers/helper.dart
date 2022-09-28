@@ -1,7 +1,19 @@
 import 'dart:ui';
 import 'dart:math';
 import 'dart:async';
+import 'dart:convert';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:arkit_plugin/arkit_plugin.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:grid_test/route_generator.dart';
+import 'package:location/location.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:flutter_uxcam/flutter_uxcam.dart';
+import '../backend/api.dart';
 import '/generated/l10n.dart';
+import '../widgets/empty_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/custom_button.dart';
@@ -12,7 +24,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:global_configuration/global_configuration.dart';
 
 final sharedPrefs = SharedPreferences.getInstance();
 
@@ -35,6 +46,38 @@ final dF = isAndroid || isFuchsia || isLinux || isWindows;
 
 final isPortable = isAndroid || isIOS;
 
+final assetImagePath = gc?.getValue<String>('asset_image_path') ?? '';
+
+ARKitController? arkitController;
+
+ScreenshotController con = ScreenshotController();
+
+Location location = Location();
+
+FlutterUxConfig uxc = FlutterUxConfig(userAppKey: '6fkwpg17zc9ma8e');
+
+DateTime? currentBackPressTime;
+
+String imgBaseUrl = '';
+
+Connectivity conn = Connectivity();
+
+WidgetsBinding? wb;
+
+Location place = Location();
+
+RouteGenerator rg = RouteGenerator();
+
+LocationPermission? perm;
+
+PermissionStatus? status;
+
+GoogleMapController? mapCon;
+
+Completer<GoogleMapController> completer = Completer<GoogleMapController>();
+
+DeviceInfoPlugin dip = DeviceInfoPlugin();
+
 enum LoaderType {
   normal,
   rotatingPlain,
@@ -52,172 +95,32 @@ enum LoaderType {
   rotatingCircle,
   foldingCube,
   pumpingHeart,
-  dualRing,
   hourGlass,
   pouringHourGlass,
+  pouringHourGlassRefined,
   fadingGrid,
   ring,
   ripple,
   spinningCircle,
-  squareCircle
+  spinningLines,
+  squareCircle,
+  dualRing,
+  pianoWave,
+  dancingSquare,
+  threeInOut
 }
 
 enum ButtonType { raised, text, border }
 
 enum AlertType { normal, cupertino }
 
-WidgetsBinding? wb;
+List<Stream<Barcode>> css = <Stream<Barcode>>[];
 
-Stream<Barcode>? bcs;
-
-StreamSubscription<Barcode>? bcsp;
-
-getData(Map<String, dynamic> data) {
-  return data['data'] ?? [];
-}
-
-int getIntData(Map<String, dynamic> data) {
-  return (data['data'] as int);
-}
-
-double getDoubleData(Map<String, dynamic> data) {
-  return (data['data'] as double);
-}
-
-bool getBoolData(Map<String, dynamic> data) {
-  return (data['data'] as bool);
-}
-
-getObjectData(Map<String, dynamic> data) {
-  return data['data'] ?? <String, dynamic>{};
-}
-
-Future<Uint8List> getBytesFromAsset(String path, {int? width}) async {
-  ByteData data = await rootBundle.load(path);
-  Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),
-      targetWidth: width);
-  FrameInfo fi = await codec.getNextFrame();
-  return (await fi.image.toByteData(format: ImageByteFormat.png))!
-      .buffer
-      .asUint8List();
-}
+List<StreamSubscription<Barcode>> scs = <StreamSubscription<Barcode>>[];
 
 void log(Object? object) {
   if (kDebugMode) print(object);
 }
-
-List<Icon> getStarsList(double rate, {double size = 18}) {
-  var list = <Icon>[];
-  list = List.generate(rate.floor(), (index) {
-    return Icon(Icons.star, size: size, color: const Color(0xFFFFB24D));
-  });
-  if (rate - rate.floor() > 0) {
-    list.add(Icon(Icons.star_half, size: size, color: const Color(0xFFFFB24D)));
-  }
-  list.addAll(
-      List.generate(5 - rate.floor() - (rate - rate.floor()).ceil(), (index) {
-    return Icon(Icons.star_border, size: size, color: const Color(0xFFFFB24D));
-  }));
-  return list;
-}
-
-Future<List<String>> getLocalStorageKeys() async {
-  final prefs = await sharedPrefs;
-  return prefs.getKeys().toList();
-}
-
-bool parseBool(String? source) {
-  return source != null &&
-      source.isNotEmpty &&
-      (source.toLowerCase() == 'true' ||
-          source.toUpperCase() == 'TRUE' ||
-          ((int.tryParse(source) ?? 0) > 0));
-}
-
-String limitString(String text, {int limit = 24, String hiddenText = '...'}) {
-  return text.substring(0, min<int>(limit, text.length)) +
-      (text.length > limit ? hiddenText : '');
-}
-
-String getCreditCardNumber(String number) {
-  String result = '';
-  if (number.isNotEmpty && number.length == 16) {
-    result = number.substring(0, 4);
-    result += ' ${number.substring(4, 8)}';
-    result += ' ${number.substring(8, 12)}';
-    result += ' ${number.substring(12, 16)}';
-  }
-  return result;
-}
-
-Uri getUri(String path) {
-  String path = Uri.parse(GlobalConfiguration().getValue('base_url')).path;
-  if (!path.endsWith('/')) {
-    path += '/';
-  }
-  Uri uri = Uri(
-      scheme: Uri.parse(GlobalConfiguration().getValue('base_url')).scheme,
-      host: Uri.parse(GlobalConfiguration().getValue('base_url')).host,
-      port: Uri.parse(GlobalConfiguration().getValue('base_url')).port,
-      path: path + path);
-  return uri;
-}
-
-Color getColorFromHex(String hex) {
-  if (hex.contains('#')) {
-    return Color(int.parse(hex.replaceAll('#', '0xFF')));
-  } else {
-    return Color(int.parse('0xFF$hex'));
-  }
-}
-
-BoxFit getBoxFit(String boxFit) {
-  switch (boxFit) {
-    case 'cover':
-      return BoxFit.cover;
-    case 'fill':
-      return BoxFit.fill;
-    case 'contain':
-      return BoxFit.contain;
-    case 'fit_height':
-      return BoxFit.fitHeight;
-    case 'fit_width':
-      return BoxFit.fitWidth;
-    case 'none':
-      return BoxFit.none;
-    case 'scale_down':
-      return BoxFit.scaleDown;
-    default:
-      return BoxFit.cover;
-  }
-}
-
-AlignmentDirectional getAlignmentDirectional(String alignmentDirectional) {
-  switch (alignmentDirectional) {
-    case 'top_start':
-      return AlignmentDirectional.topStart;
-    case 'top_center':
-      return AlignmentDirectional.topCenter;
-    case 'top_end':
-      return AlignmentDirectional.topEnd;
-    case 'center_start':
-      return AlignmentDirectional.centerStart;
-    case 'center':
-      return AlignmentDirectional.topCenter;
-    case 'center_end':
-      return AlignmentDirectional.centerEnd;
-    case 'bottom_start':
-      return AlignmentDirectional.bottomStart;
-    case 'bottom_center':
-      return AlignmentDirectional.bottomCenter;
-    case 'bottom_end':
-      return AlignmentDirectional.bottomEnd;
-    default:
-      return AlignmentDirectional.bottomEnd;
-  }
-}
-
-String putDateToString(DateTime dt) => '${dt.month}/${dt.year}';
 
 void rollbackOrientations() async {
   await SystemChrome.setPreferredOrientations([
@@ -234,6 +137,258 @@ void lockScreenRotation() async {
     // DeviceOrientation.landscapeLeft,
     DeviceOrientation.portraitUp,
   ]);
+}
+
+void showStatusBar() async {
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+      overlays: [SystemUiOverlay.top]);
+}
+
+void invokeVCB(VoidCallback vcb) {
+  log('object');
+  vcb.call();
+  log('object2');
+}
+
+void getLocationPermission() async {
+  final locPerm = await location.hasPermission();
+  switch (locPerm) {
+    case PermissionStatus.denied:
+    case PermissionStatus.deniedForever:
+      switch (await location.requestPermission()) {
+        case PermissionStatus.denied:
+        case PermissionStatus.deniedForever:
+          getLocationPermission();
+          break;
+        default:
+          doNothing();
+          break;
+      }
+      break;
+    default:
+      doNothing();
+      break;
+  }
+}
+
+void getGPSPermission() async {
+  final getPerm = await Geolocator.checkPermission();
+  switch (getPerm) {
+    case LocationPermission.always:
+    case LocationPermission.whileInUse:
+      doNothing();
+      break;
+    default:
+      switch (await Geolocator.requestPermission()) {
+        case LocationPermission.always:
+        case LocationPermission.whileInUse:
+          doNothing();
+          break;
+        default:
+          getGPSPermission();
+          break;
+      }
+      break;
+  }
+}
+
+// void checkPermissionStatus(Permission permission) async {
+//   switch (defaultTargetPlatform) {
+//     case TargetPlatform.android:
+//       final dro = await dip.androidInfo;
+//       if (dro.isPhysicalDevice ?? false) {
+//         rqs:
+//         switch (await permission.status) {
+//           case PermissionStatus.denied:
+//           case PermissionStatus.permanentlyDenied:
+//             switch (await permission.request()) {
+//               case PermissionStatus.denied:
+//               case PermissionStatus.permanentlyDenied:
+//                 checkPermissionStatus(permission);
+//                 break;
+//               default:
+//                 break rqs;
+//             }
+//             break;
+//           default:
+//             break rqs;
+//         }
+//       } else {
+//         log(dro.id);
+//         log(dro.board);
+//         log(dro.bootloader);
+//         log(dro.brand);
+//         log(dro.device);
+//         log(dro.display);
+//         log(dro.fingerprint);
+//         log(dro.hardware);
+//         log(dro.host);
+//         log(dro.id);
+//         log(dro.manufacturer);
+//         log(dro.version);
+//         log(dro.type);
+//         log(dro.tags);
+//         log(dro.systemFeatures);
+//         log(dro.supported64BitAbis);
+//         log(dro.supported32BitAbis);
+//         log(dro.model);
+//         log(dro.product);
+//       }
+//       break;
+//     case TargetPlatform.iOS:
+//       final ini = await dip.iosInfo;
+//       if (ini.isPhysicalDevice) {
+//         rqs:
+//         switch (await permission.status) {
+//           case PermissionStatus.denied:
+//           case PermissionStatus.permanentlyDenied:
+//             switch (await permission.request()) {
+//               case PermissionStatus.denied:
+//               case PermissionStatus.permanentlyDenied:
+//                 checkPermissionStatus(permission);
+//                 break;
+//               default:
+//                 break rqs;
+//             }
+//             break;
+//           default:
+//             break rqs;
+//         }
+//       } else {
+//         log(ini.identifierForVendor);
+//         log(ini.model);
+//         log(ini.localizedModel);
+//         log(ini.name);
+//         log(ini.systemName);
+//         log(ini.systemVersion);
+//         log(ini.utsname.machine);
+//         log(ini.utsname.nodename);
+//         log(ini.utsname.release);
+//         log(ini.utsname.sysname);
+//         log(ini.utsname.version);
+//       }
+//       break;
+//     default:
+//       doNothing();
+//       break;
+//   }
+// }
+
+void hideLoader(Duration time, {LoaderType? type}) {
+  Timer(time, () {
+    try {
+      overlayLoader(time, type: type).remove();
+    } catch (e) {
+      log(e);
+    }
+  }).cancel();
+}
+
+void getAppVersion() async {
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  log(packageInfo.version);
+}
+
+void doNothing() {}
+
+bool Function(Route<dynamic>) getRoutePredicate(String routeName) {
+  return ModalRoute.withName(routeName);
+}
+
+OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
+  Widget loaderBuilder(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
+    return Positioned(
+        top: 0,
+        left: 0,
+        width: size.width,
+        height: size.height,
+        child: Material(
+            color: theme.primaryColor.withOpacity(0.85),
+            child: CircularLoader(
+                duration: time,
+                loaderType: type,
+                // heightFactor: 16,
+                // widthFactor: 16,
+                color: theme.primaryColor)));
+  }
+
+  return OverlayEntry(builder: loaderBuilder);
+}
+
+List<String> getFirstAndLastName(String name) {
+  List<String> ls = [];
+  if (name.isNotEmpty) {
+    ls.add(name.trim().split(' ')[0]);
+    ls.add(name.trim().split(' ')[name.trim().split(' ').length - 1]);
+  }
+  return ls;
+}
+
+String putDateTimeToString(DateTime element, String sep) {
+  int ds = (element.millisecond * 1000) + element.microsecond;
+  String str = element.year.toString();
+  str +=
+      ('$sep${element.month}$sep${element.day}|${element.hour}:${element.minute}:${element.second}.$ds');
+  return str;
+}
+
+Widget errorBuilder(BuildContext context, Object object, StackTrace? trace) {
+  final hpe = Helper.of(context);
+  log(object);
+  log(trace);
+  return Icon(Icons.error,
+      size: hpe.height / 16, color: hpe.theme.secondaryHeaderColor);
+}
+
+Widget getPageLoader(Size size) {
+  return Image.asset('${assetImagePath}loading_trend.gif',
+      width: size.width, fit: BoxFit.fill, height: size.height);
+}
+
+Widget getPageLoader1(Size size) {
+  return Image.asset('${assetImagePath}loader1.gif',
+      width: size.width, fit: BoxFit.fill, height: size.height);
+}
+
+Widget getPlaceHolder(BuildContext context, String url) {
+  final size = MediaQuery.of(context).size;
+  return Image.asset('${assetImagePath}loading.gif',
+      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
+}
+
+Widget getPlaceHolderNoImage(BuildContext context, String url) {
+  final size = MediaQuery.of(context).size;
+  return Image.asset('${assetImagePath}noImage.png',
+      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
+}
+
+Widget getErrorWidgetNoImage(BuildContext context, String url, dynamic error) {
+  final size = MediaQuery.of(context).size;
+  return Image.asset('${assetImagePath}noImage.png',
+      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
+}
+
+Widget getErrorWidget(BuildContext context, String url, dynamic error) {
+  final size = MediaQuery.of(context).size;
+  return Image.asset('${assetImagePath}noImage.png',
+      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
+}
+
+Future<bool> revealToast(String content,
+    {double? fontSize, ToastGravity? gravity, Toast? length}) async {
+  try {
+    final p = await Fluttertoast.showToast(
+            msg: content,
+            fontSize: fontSize,
+            gravity: gravity,
+            toastLength: length) ??
+        false;
+    return p;
+  } catch (e) {
+    rethrow;
+  }
 }
 
 TimeOfDay getTime(String s) {
@@ -289,6 +444,18 @@ num getLargestNumber(List<num> list) {
   }
 }
 
+int largestFactorUnderTen(int no, {int lmt = 10}) {
+  int fact = 0;
+  for (int i = 2; i < no; i++) {
+    if (i > (lmt - 1)) {
+      break;
+    } else if (no % i == 0) {
+      fact = i;
+    }
+  }
+  return fact;
+}
+
 bool compareDates(DateTime a, DateTime b) {
   return a.year == b.year &&
       a.month == b.month &&
@@ -300,7 +467,7 @@ bool compareDates(DateTime a, DateTime b) {
       a.microsecond == b.microsecond;
 }
 
-double getTax(orderamount) {
+double getTax(num orderamount) {
   return (5 * orderamount) / 100;
 }
 
@@ -309,116 +476,231 @@ bool predicate(Route<dynamic> route) {
   return false;
 }
 
-OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
-  Widget loaderBuilder(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final theme = Theme.of(context);
-    return Positioned(
-        top: 0,
-        left: 0,
-        width: size.width,
-        height: size.height,
-        child: Material(
-            color: theme.primaryColor.withOpacity(0.85),
-            child: CircularLoader(
-                duration: time,
-                loaderType: type,
-                // heightFactor: 16,
-                // widthFactor: 16,
-                color: theme.primaryColor)));
+List<Icon> getStarsList(double rate, {double size = 18}) {
+  final list = List<Icon>.generate(rate.floor(), (index) {
+    return Icon(Icons.star, size: size, color: const Color(0xFFFFB24D));
+  });
+  if (rate - rate.floor() > 0) {
+    list.add(Icon(Icons.star_half, size: size, color: const Color(0xFFFFB24D)));
   }
-
-  return OverlayEntry(builder: loaderBuilder);
+  list.addAll(List<Icon>.generate(
+      5 - rate.floor() - (rate - rate.floor()).ceil(), (index) {
+    return Icon(Icons.star_border, size: size, color: const Color(0xFFFFB24D));
+  }));
+  return list;
 }
 
-void hideLoader(Duration time, {LoaderType? type}) {
-  Timer(time, () {
-    try {
-      overlayLoader(time, type: type).remove();
-    } catch (e) {
-      log(e);
-    }
-  }).cancel();
+Future<List<String>> getLocalStorageKeys() async {
+  final prefs = await sharedPrefs;
+  return prefs.getKeys().toList();
 }
 
-Widget errorBuilder(BuildContext context, Object object, StackTrace? trace) {
-  final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/loading.gif',
-      matchTextDirection: true,
-      height: size.height / 12.8,
-      width: size.width / 6.4,
-      fit: BoxFit.fill);
+bool parseBool(String? source) {
+  return (source?.isNotEmpty ?? false) &&
+      (source?.toLowerCase() == 'true' ||
+          source?.toUpperCase() == 'TRUE' ||
+          source?.toLowerCase() == 'yes' ||
+          source?.toUpperCase() == 'YES' ||
+          source?.toLowerCase() == 'ok' ||
+          source?.toUpperCase() == 'OK' ||
+          ((int.tryParse(source ?? '0') ?? 0) > 0));
 }
 
-Widget getPageLoader(Size size) {
-  return Image.asset('assets/images/loading_trend.gif',
-      width: size.width, fit: BoxFit.fill, height: size.height);
+String limitString(String text, {int limit = 24, String hiddenText = '...'}) {
+  return text.substring(0, min<int>(limit, text.length)) +
+      (text.length > limit ? hiddenText : '');
 }
 
-Widget getPageLoader1(Size size) {
-  return Image.asset('assets/images/loader1.gif',
-      width: size.width, fit: BoxFit.fill, height: size.height);
+String getCreditCardNumber(String number) {
+  String result = '';
+  if (number.isNotEmpty && number.length == 16) {
+    result = number.substring(0, 4);
+    result += ' ${number.substring(4, 8)}';
+    result += ' ${number.substring(8, 12)}';
+    result += ' ${number.substring(12, 16)}';
+  }
+  return result;
 }
 
-Widget getPlaceHolder(BuildContext context, String url) {
-  final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/loading.gif',
-      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
+Uri getUri(String path) {
+  String path =
+      Uri.tryParse(gc?.getValue<String>('base_url') ?? '')?.path ?? '';
+  if (!path.endsWith('/')) {
+    path += '/';
+  }
+  Uri uri = Uri(
+      scheme: Uri.tryParse(gc?.getValue<String>('base_url') ?? '')?.scheme,
+      host: Uri.tryParse(gc?.getValue<String>('base_url') ?? '')?.host,
+      port: Uri.tryParse(gc?.getValue('base_url') ?? '')?.port,
+      path: path + path);
+  return uri;
 }
 
-Widget getPlaceHolderNoImage(BuildContext context, String url) {
-  final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/noImage.png',
-      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
-}
-
-Widget getErrorWidgetNoImage(BuildContext context, String url, dynamic error) {
-  final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/noImage.png',
-      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
-}
-
-Widget getErrorWidget(BuildContext context, String url, dynamic error) {
-  final size = MediaQuery.of(context).size;
-  return Image.asset('assets/images/noImage.png',
-      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
-}
-
-Future<bool> revealToast(String content,
-    {double? fontSize, ToastGravity? gravity, Toast? length}) async {
+Color getColorFromHex(String hex) {
   try {
-    final p = await Fluttertoast.showToast(
-            msg: content,
-            fontSize: fontSize,
-            gravity: gravity,
-            toastLength: length) ??
-        false;
-    return p;
+    if (hex.contains('#')) {
+      return Color(int.tryParse(hex.replaceAll('#', '0xFF')) ?? 0x00000000);
+    } else {
+      return Color(int.tryParse('0xFF$hex') ?? 0x00000000);
+    }
   } catch (e) {
-    rethrow;
+    log(e);
+    return const Color(0x00000000);
   }
 }
+
+BoxFit getBoxFit(String boxFit) {
+  switch (boxFit) {
+    case 'cover':
+      return BoxFit.cover;
+    case 'fill':
+      return BoxFit.fill;
+    case 'contain':
+      return BoxFit.contain;
+    case 'fit_height':
+      return BoxFit.fitHeight;
+    case 'fit_width':
+      return BoxFit.fitWidth;
+    case 'none':
+      return BoxFit.none;
+    case 'scale_down':
+      return BoxFit.scaleDown;
+    default:
+      return BoxFit.cover;
+  }
+}
+
+AlignmentDirectional getAlignmentDirectional(String alignmentDirectional) {
+  switch (alignmentDirectional) {
+    case 'top_start':
+      return AlignmentDirectional.topStart;
+    case 'top_center':
+      return AlignmentDirectional.topCenter;
+    case 'top_end':
+      return AlignmentDirectional.topEnd;
+    case 'center_start':
+      return AlignmentDirectional.centerStart;
+    case 'center':
+      return AlignmentDirectional.topCenter;
+    case 'center_end':
+      return AlignmentDirectional.centerEnd;
+    case 'bottom_start':
+      return AlignmentDirectional.bottomStart;
+    case 'bottom_center':
+      return AlignmentDirectional.bottomCenter;
+    case 'bottom_end':
+    default:
+      return AlignmentDirectional.bottomEnd;
+  }
+}
+
+List<double> getVector(LatLng point) {
+  final latRad = (point.latitude * 11) / 630; // convert to radians
+  final longRad = (point.longitude * 11) / 630; // convert to radians
+  return <double>[
+    (cos(latRad) * cos(longRad)),
+    (cos(latRad) * sin(longRad)),
+    sin(latRad)
+  ];
+}
+
+List<double> getCoords(LatLng point) {
+  final latRad = (point.latitude * 11) / 630; // convert to radians
+  final longRad = (point.longitude * 11) / 630; // convert to radians
+  return <double>[(cos(latRad) * cos(longRad)), (cos(latRad) * sin(longRad))];
+}
+
+double getDoubleData(Map<String, dynamic> data) {
+  return (data['data'] as double);
+}
+
+bool getBoolData(Map<String, dynamic> data) {
+  return (data['data'] as bool);
+}
+
+String getData(List<int> values) {
+  return base64.encode(values);
+}
+
+Uint8List putData(String value) {
+  return base64.decode(value);
+}
+
+Uint8List fromIntList(List<int> list) {
+  return putData(getData(list));
+}
+
+double haversineDistance(LatLng a, LatLng b) {
+  double dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
+  double dLong = ((b.longitude - a.longitude).abs() * 11) / 630;
+  final v1 = 1 + cos(dLat);
+  final v2 = 2 *
+      cos((a.latitude * 11) / 630) *
+      cos((b.latitude * 11) / 630) *
+      cos(dLong);
+  return (12.742 * asin(sqrt(((v1 - v2).abs()) / 2)));
+}
+
+double getAngle(LatLng a, LatLng b) {
+  // double dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
+  double dLon = ((b.longitude - a.longitude).abs() * 11) / 630;
+  final y = sin(dLon) * cos(b.longitude);
+  final x = cos(a.latitude) * sin(b.latitude) -
+      sin(a.latitude) * cos(b.latitude) * cos(dLon);
+  return atan2(y, x);
+}
+
+Widget imageFromBytesBuilder(
+    BuildContext context, List<int>? pic, Widget? child) {
+  try {
+    return Image.memory(Uint8List.fromList(pic!));
+  } catch (e) {
+    log(e);
+    return (child ?? const EmptyWidget());
+  }
+}
+
+Future<Uint8List> getBytesFromAsset(String path, {int? width}) async {
+  ByteData data = await rootBundle.load(path);
+  final codec = await instantiateImageCodec(data.buffer.asUint8List(),
+      targetWidth: width);
+  FrameInfo fi = await codec.getNextFrame();
+  return (await fi.image.toByteData(format: ImageByteFormat.png))!
+      .buffer
+      .asUint8List();
+}
+
+String putDateToString(DateTime dt) => '${dt.month}/${dt.year}';
 
 class Helper extends ChangeNotifier {
   late BuildContext buildContext;
-  DateTime? currentBackPressTime;
-  String imgBaseUrl = '';
-  Connectivity con = Connectivity();
   S get loc => S.of(buildContext);
   ThemeData get theme => Theme.of(buildContext);
   OverlayState? get ol => Overlay.of(buildContext);
   NavigatorState get nav => Navigator.of(buildContext);
-  MediaQueryData get dimensions => MediaQuery.of(buildContext);
+  MediaQueryData get dimensions =>
+      MediaQuery.maybeOf(buildContext) ?? MediaQuery.of(buildContext);
   ModalRoute<Object?>? get route => ModalRoute.of(buildContext);
+  AnimatedListState get als =>
+      AnimatedList.maybeOf(buildContext) ?? AnimatedList.of(buildContext);
+  ScaffoldState get sct =>
+      Scaffold.maybeOf(buildContext) ?? Scaffold.of(buildContext);
+  SliverAnimatedListState get slas =>
+      SliverAnimatedList.maybeOf(buildContext) ??
+      SliverAnimatedList.of(buildContext);
+  ScaffoldMessengerState get smcT =>
+      ScaffoldMessenger.maybeOf(buildContext) ??
+      ScaffoldMessenger.of(buildContext);
   Size get size => dimensions.size;
   double get pixelRatio => dimensions.devicePixelRatio;
-  double get textScaleFactor => dimensions.textScaleFactor;
+  double get textScaleFactor =>
+      (MediaQuery.textScaleFactorOf(buildContext) +
+          dimensions.textScaleFactor) /
+      2;
   double get height => size.height;
   double get width => size.width;
   double get aspectRatio => size.aspectRatio;
   double get radius => sqrt(pow(height, 2) + pow(width, 2));
-  ScaffoldState get sct => Scaffold.of(buildContext);
-  ScaffoldMessengerState get smcT => ScaffoldMessenger.of(buildContext);
   State? get st => buildContext.findAncestorStateOfType();
   TextTheme get textTheme => theme.textTheme;
   double get factor => pow(
@@ -431,12 +713,6 @@ class Helper extends ChangeNotifier {
   bool get isTablet => isPortable && size.shortestSide >= 600;
   Helper.of(BuildContext context) {
     buildContext = context;
-  }
-
-  void showStatusBar() async {
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-        overlays: [SystemUiOverlay.top]);
-    st!.setState(() {});
   }
 
   String trans(String text) {
@@ -482,17 +758,103 @@ class Helper extends ChangeNotifier {
     return Future.value(true);
   }
 
-  void goTo(String route) async {
-    Navigator.pushNamed(buildContext, route);
+  void reload(VoidCallback vcb) {
+    st?.setState(vcb);
+  }
+
+  void goTo(String routeName, {dynamic args, VoidCallback? vcb}) async {
+    try {
+      if (route != null && route!.settings.name != routeName) {
+        final p = await nav.pushNamed(routeName, arguments: args);
+        log(p);
+        if (vcb != null) {
+          reload(vcb);
+        }
+      } else {
+        log(routeName);
+      }
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  void gotoOnce(String routeName,
+      {dynamic args, dynamic result, VoidCallback? vcb}) async {
+    try {
+      if (route?.settings.name != routeName) {
+        final p = await nav.pushReplacementNamed(routeName,
+            arguments: args, result: result);
+        if (vcb != null) {
+          reload(vcb);
+        }
+        log(p);
+      } else {
+        log(routeName);
+      }
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  void gotoForever(String routeName, {dynamic args}) async {
+    try {
+      if (route?.settings.name != routeName) {
+        final p = await nav.pushNamedAndRemoveUntil(routeName, predicate,
+            arguments: args);
+        log(p);
+      } else {
+        log(routeName);
+      }
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  void goBackForeverTo(String routeName) {
+    try {
+      nav.popUntil(getRoutePredicate(routeName));
+    } catch (e) {
+      log(e);
+    }
   }
 
   void goBack({dynamic result}) {
-    Navigator.pop(buildContext, result);
+    try {
+      log(result);
+      nav.pop(result);
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  void goBackEmpty() {
+    goBack();
   }
 
   void addLoader(Duration time, {LoaderType? type}) {
-    if (ol != null && ol!.mounted) {
-      ol!.insert(overlayLoader(time, type: type));
+    if (ol?.mounted ?? false) {
+      ol?.insert(overlayLoader(time, type: type));
+    }
+  }
+
+  void getConnectStatus({VoidCallback? vcb}) async {
+    final connectivityResult = await conn.checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      final f1 = await revealDialogBox([
+        'Try Again'
+      ], [
+        () {
+          goBack(result: connectivityResult == ConnectivityResult.none);
+          getConnectStatus();
+        }
+      ],
+          action: 'You are Off-Line!!!!!',
+          type: AlertType.cupertino,
+          dismissive: false);
+      if (!f1) goBack();
+    } else {
+      // I am connected to a mobile network.
+      vcb?.call();
     }
   }
 
@@ -500,7 +862,7 @@ class Helper extends ChangeNotifier {
     return revealToast('Please Wait....', length: Toast.LENGTH_LONG);
   }
 
-  Future<bool?> showDialogBox(
+  Future<bool?> appearDialogBox(
       {Widget? title,
       AlertType? type,
       Widget? content,
@@ -565,20 +927,20 @@ class Helper extends ChangeNotifier {
   }
 
   Future<bool> revealDialogBox(List<String> options, List<VoidCallback> actions,
-      {String? action,
-      String? title,
+      {String? title,
+      String? action,
       AlertType? type,
       bool? dismissive,
-      EdgeInsets? titlePadding,
-      EdgeInsets? actionPadding,
-      EdgeInsets? buttonPadding,
+      Curve? insetAnimation,
       TextStyle? titleStyle,
       TextStyle? actionStyle,
       TextStyle? optionStyle,
-      ScrollController? scrollController,
-      ScrollController? actionScrollController,
       Duration? insetDuration,
-      Curve? insetAnimation}) async {
+      EdgeInsets? titlePadding,
+      EdgeInsets? actionPadding,
+      EdgeInsets? buttonPadding,
+      ScrollController? scrollController,
+      ScrollController? actionScrollController}) async {
     Widget optionsMap(String e) {
       final child = Text(e, style: optionStyle);
       final onTap = actions[options.indexOf(e)];
@@ -617,40 +979,88 @@ class Helper extends ChangeNotifier {
             actions.isNotEmpty;
   }
 
+  Future<bool> showSimpleYesNo(
+      {bool? flag,
+      bool? reverse,
+      String? title,
+      String? action,
+      AlertType? type,
+      bool? dismissive,
+      Curve? insetAnimation,
+      TextStyle? titleStyle,
+      TextStyle? actionStyle,
+      TextStyle? optionStyle,
+      Duration? insetDuration,
+      EdgeInsets? titlePadding,
+      EdgeInsets? actionPadding,
+      EdgeInsets? buttonPadding,
+      ScrollController? scrollController,
+      ScrollController? actionScrollController}) {
+    VoidCallback mapAction(String action) {
+      return () {
+        goBack(result: parseBool(action));
+      };
+    }
+
+    final options = [
+      (flag ?? true) ? 'YES' : 'OK',
+      (flag ?? true) ? 'NO' : 'Cancel'
+    ];
+    final actions = ((reverse ?? false) ? options.reversed : options)
+        .map<VoidCallback>(mapAction)
+        .toList();
+    return revealDialogBox(options, actions,
+        type: type,
+        title: title,
+        action: action,
+        dismissive: dismissive,
+        titleStyle: titleStyle,
+        actionStyle: actionStyle,
+        optionStyle: optionStyle,
+        titlePadding: titlePadding,
+        insetDuration: insetDuration,
+        buttonPadding: buttonPadding,
+        actionPadding: actionPadding,
+        insetAnimation: insetAnimation,
+        scrollController: scrollController,
+        actionScrollController: actionScrollController);
+  }
+
   Future<bool> showSimplePopup(String option, VoidCallback onActionDone,
       {String? action,
       String? title,
       AlertType? type,
       bool? dismissive,
-      EdgeInsets? titlePadding,
-      EdgeInsets? actionPadding,
-      EdgeInsets? buttonPadding,
+      Curve? insetAnimation,
       TextStyle? titleStyle,
       TextStyle? actionStyle,
       TextStyle? optionStyle,
-      ScrollController? scrollController,
-      ScrollController? actionScrollController,
       Duration? insetDuration,
-      Curve? insetAnimation}) {
+      EdgeInsets? titlePadding,
+      EdgeInsets? actionPadding,
+      EdgeInsets? buttonPadding,
+      ScrollController? scrollController,
+      ScrollController? actionScrollController}) {
     return revealDialogBox([option], [onActionDone],
         type: type,
+        title: title,
+        action: action,
         dismissive: dismissive,
         titleStyle: titleStyle,
         actionStyle: actionStyle,
+        optionStyle: optionStyle,
         titlePadding: titlePadding,
         buttonPadding: buttonPadding,
         actionPadding: actionPadding,
-        action: action,
-        title: title,
-        scrollController: scrollController,
-        actionScrollController: actionScrollController,
-        insetAnimation: insetAnimation,
         insetDuration: insetDuration,
-        optionStyle: optionStyle);
+        insetAnimation: insetAnimation,
+        scrollController: scrollController,
+        actionScrollController: actionScrollController);
   }
 
-  Future<T?> appearDialogBox<T>(
-      {Widget? title,
+  Future<T?> showDialogBox<T>(
+      {Widget? child,
+      Widget? title,
       AlertType? type,
       Widget? content,
       bool? dismissive,
@@ -681,7 +1091,6 @@ class Helper extends ChangeNotifier {
               insetAnimationDuration:
                   insetDuration ?? const Duration(milliseconds: 100));
         case AlertType.normal:
-        default:
           return AlertDialog(
               title: title,
               content: content,
@@ -695,22 +1104,28 @@ class Helper extends ChangeNotifier {
               contentPadding: contentPadding ??
                   EdgeInsets.symmetric(
                       horizontal: width / 25, vertical: height / 100));
+        default:
+          return child ?? const EmptyWidget();
       }
     }
 
-    return type == AlertType.cupertino
-        ? showCupertinoDialog<T>(
+    switch (type) {
+      case AlertType.cupertino:
+        return showCupertinoDialog<T>(
             context: buildContext,
             builder: dialogBuilder,
             barrierLabel: barrierLabel,
-            routeSettings: routeSettings,
-            barrierDismissible: dismissive ?? false)
-        : showDialog<T>(
+            barrierDismissible: dismissive ?? false,
+            routeSettings: routeSettings ?? route?.settings);
+      case AlertType.normal:
+      default:
+        return showDialog<T>(
             context: buildContext,
             builder: dialogBuilder,
             barrierLabel: barrierLabel,
-            routeSettings: routeSettings,
-            barrierDismissible: dismissive ?? false);
+            barrierDismissible: dismissive ?? false,
+            routeSettings: routeSettings ?? route?.settings);
+    }
   }
 
   Future<T?> manifestDialogBox<T>(
@@ -747,7 +1162,7 @@ class Helper extends ChangeNotifier {
     return options.length == actions.length &&
             options.isNotEmpty &&
             actions.isNotEmpty
-        ? await appearDialogBox<T>(
+        ? await showDialogBox<T>(
             type: type,
             dismissive: dismissive,
             titleStyle: titleStyle,
@@ -765,31 +1180,17 @@ class Helper extends ChangeNotifier {
         : null;
   }
 
-  List<String> getFirstAndLastName(String name) {
-    List<String> ls = [];
-    if (name != '') {
-      ls.add(name.trim().split(' ')[0]);
-      ls.add(name.trim().split(' ')[name.trim().split(' ').length - 1]);
-    }
-    return ls;
-  }
-
-  void navigateTo(String route,
-      {dynamic arguments, FutureOr<dynamic> Function(dynamic)? onGoBack}) {
-    Navigator.pushNamed(buildContext, route, arguments: arguments)
-        .then(onGoBack ?? doNothing);
-  }
-
-  String? validatePhoneNumber(String phone) {
-    return (phone.length == 10 && int.tryParse(phone) != null
+  String? validatePhoneNumber(String? phone) {
+    return (phone != null && phone.length == 10 && int.tryParse(phone) != null
         ? null
         : loc.not_a_valid_phone);
   }
 
-  String? validatePassword(String password) {
+  String? validatePassword(String? password) {
     RegExp re =
         RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#$&*~]).{8,}$');
-    return password.isNotEmpty &&
+    return password != null &&
+            password.isNotEmpty &&
             password.length >= 6 &&
             password.length <= 12 &&
             re.hasMatch(password)
@@ -797,71 +1198,17 @@ class Helper extends ChangeNotifier {
         : loc.wrong_email_or_password;
   }
 
-  String? validateEmail(String email) {
+  String? validateEmail(String? email) {
     RegExp re = RegExp(
         r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
-    return re.hasMatch(email) && re.allMatches(email).length == 1
+    return email != null &&
+            email.isNotEmpty &&
+            re.hasMatch(email) &&
+            re.allMatches(email).length == 1
         ? null
         : loc.not_a_valid_email;
   }
 
-  String? validateName(String value) =>
-      value.isEmpty ? loc.not_a_valid_full_name : null;
-
-  void getConnectStatus({VoidCallback? vcb}) async {
-    final connectivityResult = await con.checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      final f1 = await revealDialogBox([
-        'Try Again'
-      ], [
-        () {
-          goBack(result: connectivityResult == ConnectivityResult.none);
-          getConnectStatus();
-        }
-      ],
-          action: 'You are Off-Line!!!!!',
-          type: AlertType.cupertino,
-          dismissive: false);
-      if (!f1) goBack();
-    }
-    // I am connected to a mobile network.
-    else if (vcb != null) {
-      await SystemChannels.platform.invokeMethod(vcb.toString());
-    }
-  }
-
-  String putDateTimeToString(DateTime element, String sep) {
-    int ds = (element.millisecond * 1000) + element.microsecond;
-    String str = element.year.toString();
-    str +=
-        ('$sep${element.month}$sep${element.day}|${element.hour}:${element.minute}:${element.second}.$ds');
-    return str;
-  }
-
-  FutureOr<dynamic> doNothing(dynamic value) {
-    // if (element != null) {
-    log(value);
-    // } else {(element.month == null ? "" : )(element.day == null ? "" : )(element.hour == null ? "" : )(element.minute == null ? "" : )(element.second == null ? "" : )
-    // log("Year : ");
-    // log("Month : ");
-    // log("Country Name : ");
-    // log((element.year == null ? "" : )
-    //     "Admin Area : ");
-    // log("Sub Admin Area : ");
-    // log("Locality : ");
-    //   return "";
-    // }
-  }
-
-  void navigateWithoutGoBack(String route, {dynamic arguments}) {
-    Navigator.pushNamedAndRemoveUntil(buildContext, route, predicate,
-            arguments: arguments)
-        .then(doNothing);
-  }
-
-  void popAndPush(String route, {dynamic result, dynamic arguments}) {
-    Navigator.pushReplacementNamed(buildContext, route,
-            result: result, arguments: arguments)
-        .then(doNothing);
-  }
+  String? validateName(String? value) =>
+      value != null || value!.isEmpty ? loc.not_a_valid_full_name : null;
 }

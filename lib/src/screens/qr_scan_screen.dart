@@ -43,19 +43,21 @@ class QRScanScreenState extends State<QRScanScreen> {
       await con.resumeCamera();
     }
 
-    log(bcs);
-    bcs ??= con.scannedDataStream;
-    log(bcsp);
-
-    bcsp ??=
-        con.scannedDataStream.listen(onData, onDone: onDone, onError: onError);
+    if (!css.contains(con.scannedDataStream)) {
+      css.add(con.scannedDataStream);
+    }
+    final cs =
+        con.scannedDataStream.listen(onData, onError: onError, onDone: onDone);
+    if (!scs.contains(cs)) {
+      scs.add(cs);
+    }
   }
 
   Widget imageBuilder(BuildContext context, List<int>? pic, Widget? child) {
     try {
-      return pic == null || pic.isEmpty
+      return (pic?.isEmpty ?? true)
           ? (child ?? const EmptyWidget())
-          : Image.memory(Uint8List.fromList(pic), errorBuilder: errorBuilder);
+          : Image.memory(Uint8List.fromList(pic!), errorBuilder: errorBuilder);
     } catch (e) {
       log(e);
       return child ?? const EmptyWidget();
@@ -68,13 +70,28 @@ class QRScanScreenState extends State<QRScanScreen> {
 
   Widget codeStreamBuilder(
       BuildContext context, AsyncSnapshot<Barcode> result) {
-    return Text(
-        result.hasData && !result.hasError ? (result.data!.code ?? '') : '');
+    return Column(
+      children: [
+        Text(result.hasData && !result.hasError
+            ? (result.data?.code ?? '')
+            : ''),
+        Image.memory(Uint8List.fromList(result.data?.rawBytes ?? <int>[]),
+            errorBuilder: errorBuilder)
+      ],
+    );
   }
 
   void customDispose() async {
-    if (bcsp != null) {
-      await bcsp!.cancel();
+    if (css.isNotEmpty && css.remove(css.last)) {
+      log('dispose');
+    }
+    log(css);
+    if (scs.isEmpty) {
+      log('Empty');
+    } else {
+      final q = await scs.last.asFuture();
+      await scs.last.cancel();
+      log(q);
     }
   }
 
@@ -101,15 +118,13 @@ class QRScanScreenState extends State<QRScanScreen> {
                           valueListenable: image, builder: imageBuilder),
                       ValueListenableBuilder<String?>(
                           valueListenable: code, builder: codeBuilder),
-                      StreamBuilder<Barcode>(
-                          builder: codeStreamBuilder, stream: bcs),
                       Flexible(
                           child: QRView(
-                              overlay: QrScannerOverlayShape(
-                                  cutOutHeight: hp.height / 2,
-                                  cutOutWidth: hp.width),
                               key: qrKey,
-                              onQRViewCreated: onQRViewCreated))
+                              onQRViewCreated: onQRViewCreated,
+                              overlay: QrScannerOverlayShape(
+                                  cutOutWidth: hp.width,
+                                  cutOutHeight: hp.height / 2)))
                     ],
                   )),
                   const Expanded(child: Text('Hi')),

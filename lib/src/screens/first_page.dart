@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
+
+import '../backend/api.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
-import '../widgets/some_item_list_widget.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({Key? key}) : super(key: key);
@@ -11,8 +13,47 @@ class FirstPage extends StatefulWidget {
 
 class FirstPageState extends State<FirstPage> {
   Helper get hp => Helper.of(context);
+  double turns = 0;
+
+  void turnBuilder() {
+    mounted
+        ? setState(() {
+            turns += (1 / 8);
+          })
+        : doNothing();
+  }
+
+  Widget valueBuilder(BuildContext context, AsyncSnapshot<int> value) {
+    return Text(value.data.toString());
+  }
+
+  Widget mapItem(int i) {
+    return Container(
+      width: hp.width / i,
+      height: hp.height / (i * 2),
+      color: hp.theme.dividerColor,
+      // padding: const EdgeInsets.only(top: 20, bottom: 15, left: 25, right: 20),
+      child: Center(
+        child: Text(i.toString(),
+            style:
+                TextStyle(color: hp.theme.toggleableActiveColor, fontSize: 20)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    IconData idt = Icons.flip;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        idt = Icons.flip_camera_android;
+        break;
+      case TargetPlatform.iOS:
+        idt = Icons.flip_camera_android;
+        break;
+      default:
+        break;
+    }
     return Scaffold(
       appBar: AppBar(
         // title: Stack(children: [
@@ -68,10 +109,12 @@ class FirstPageState extends State<FirstPage> {
           //   onPressed: CallContact,
 
           // ),
-          // IconButton(
-          //     onPressed: hp.doNothing,
-          //     icon: const Icon(Icons.chat_bubble),
-          //     tooltip: 'notification'),
+          IconButton(
+              onPressed: () {
+                hp.goTo('/grid');
+              },
+              icon: const Icon(Icons.chat_bubble),
+              tooltip: 'chat'),
           // IconButton(
           //     onPressed: hp.doNothing,
           //     icon: Image.asset('assets/images/logout.png'),
@@ -80,55 +123,29 @@ class FirstPageState extends State<FirstPage> {
       ),
       // drawer: const Drawer(),
       body: SingleChildScrollView(
-          child: Center(
-        child: Column(
-          children: <Widget>[
-            const SizedBox(height: 50, child: SomeItemListWidget()),
-            SizedBox(
-              width: 225.0 + 225.0 + 225.0 + 3.0,
-              height: 60.0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Container(
-                    width: 225.0,
-                    height: 60.0,
-                    color: hp.theme.dividerColor,
-                    padding: const EdgeInsets.only(
-                        top: 20, bottom: 15, left: 25, right: 20),
-                    child: Text('Delivery Date',
-                        style: TextStyle(
-                            color: hp.theme.secondaryHeaderColor,
-                            fontSize: 20)),
-                  ),
-                  Container(
-                    width: 225.0,
-                    height: 60.0,
-                    color: hp.theme.dividerColor,
-                    padding: const EdgeInsets.only(
-                        top: 20, bottom: 15, left: 25, right: 20),
-                    child: Text('Delivery ID',
-                        style: TextStyle(
-                            color: hp.theme.secondaryHeaderColor,
-                            fontSize: 20)),
-                  ),
-                  Container(
-                    width: 225.0,
-                    height: 60.0,
-                    color: hp.theme.dividerColor,
-                    padding: const EdgeInsets.only(
-                        top: 20, bottom: 15, left: 25, right: 20),
-                    child: Text('Customer',
-                        style: TextStyle(
-                            color: hp.theme.secondaryHeaderColor,
-                            fontSize: 20)),
-                  ),
+          child: SizedBox(
+              width: hp.width,
+              height: hp.height,
+              child: Column(
+                children: <Widget>[
+                  AnimatedRotation(
+                      turns: turns,
+                      duration: const Duration(seconds: 1),
+                      child: const FlutterLogo()),
+                  IconButton(onPressed: turnBuilder, icon: Icon(idt)),
+                  Flexible(
+                      flex: 2,
+                      child: StreamBuilder<int>(
+                          builder: valueBuilder,
+                          stream: getValues(2),
+                          initialData: 0)),
+                  Expanded(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children:
+                              getNumbers(3).map<Widget>(mapItem).toList()))
                 ],
-              ),
-            )
-          ],
-        ),
-      )),
+              ))),
       bottomNavigationBar: SizedBox(width: hp.width, height: 50),
     );
   }
