@@ -1,14 +1,17 @@
-import 'package:grid_test/src/models/item.dart';
-import 'package:flutter_cart/flutter_cart.dart';
+import 'package:flutter/material.dart';
 
-class Cart extends FlutterCart {
-  List<Item>? items;
-  factory Cart() {
-    return Cart();
+class MyModel extends ChangeNotifier {
+  int _counter = 0;
+  late BuildContext buildContext;
+  int get counter => _counter;
+  MyModel({required BuildContext context}) {
+    buildContext = context;
   }
 
-  Cart getCart({List<Item>? list}) {
-    items = list;
-    return Cart();
+  set counter(int value) {
+    if (value != _counter) {
+      _counter = value;
+      notifyListeners();
+    }
   }
 }

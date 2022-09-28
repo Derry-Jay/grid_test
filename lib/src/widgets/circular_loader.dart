@@ -1,7 +1,7 @@
 import 'dart:async';
+import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import '../helpers/helper.dart';
 
 class CircularLoader extends StatefulWidget {
   final Color color;

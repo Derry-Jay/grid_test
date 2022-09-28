@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:arkit_plugin/arkit_plugin.dart';
 import 'package:geolocator/geolocator.dart';
@@ -153,27 +152,127 @@ void invokeVCB(VoidCallback vcb) {
 
 void getLocationPermission() async {
   final locPerm = await location.hasPermission();
-  status = locPerm == PermissionStatus.granted ||
-          locPerm == PermissionStatus.grantedLimited
-      ? locPerm
-      : await location.requestPermission();
-  if (!(status == PermissionStatus.granted ||
-      status == PermissionStatus.grantedLimited)) {
-    getLocationPermission();
+  switch (locPerm) {
+    case PermissionStatus.denied:
+    case PermissionStatus.deniedForever:
+      switch (await location.requestPermission()) {
+        case PermissionStatus.denied:
+        case PermissionStatus.deniedForever:
+          getLocationPermission();
+          break;
+        default:
+          doNothing();
+          break;
+      }
+      break;
+    default:
+      doNothing();
+      break;
   }
 }
 
 void getGPSPermission() async {
   final getPerm = await Geolocator.checkPermission();
-  perm = getPerm == LocationPermission.always ||
-          getPerm == LocationPermission.whileInUse
-      ? getPerm
-      : (await Geolocator.requestPermission());
-  if (!(perm == LocationPermission.always ||
-      perm == LocationPermission.whileInUse)) {
-    getGPSPermission();
+  switch (getPerm) {
+    case LocationPermission.always:
+    case LocationPermission.whileInUse:
+      doNothing();
+      break;
+    default:
+      switch (await Geolocator.requestPermission()) {
+        case LocationPermission.always:
+        case LocationPermission.whileInUse:
+          doNothing();
+          break;
+        default:
+          getGPSPermission();
+          break;
+      }
+      break;
   }
 }
+
+// void checkPermissionStatus(Permission permission) async {
+//   switch (defaultTargetPlatform) {
+//     case TargetPlatform.android:
+//       final dro = await dip.androidInfo;
+//       if (dro.isPhysicalDevice ?? false) {
+//         rqs:
+//         switch (await permission.status) {
+//           case PermissionStatus.denied:
+//           case PermissionStatus.permanentlyDenied:
+//             switch (await permission.request()) {
+//               case PermissionStatus.denied:
+//               case PermissionStatus.permanentlyDenied:
+//                 checkPermissionStatus(permission);
+//                 break;
+//               default:
+//                 break rqs;
+//             }
+//             break;
+//           default:
+//             break rqs;
+//         }
+//       } else {
+//         log(dro.id);
+//         log(dro.board);
+//         log(dro.bootloader);
+//         log(dro.brand);
+//         log(dro.device);
+//         log(dro.display);
+//         log(dro.fingerprint);
+//         log(dro.hardware);
+//         log(dro.host);
+//         log(dro.id);
+//         log(dro.manufacturer);
+//         log(dro.version);
+//         log(dro.type);
+//         log(dro.tags);
+//         log(dro.systemFeatures);
+//         log(dro.supported64BitAbis);
+//         log(dro.supported32BitAbis);
+//         log(dro.model);
+//         log(dro.product);
+//       }
+//       break;
+//     case TargetPlatform.iOS:
+//       final ini = await dip.iosInfo;
+//       if (ini.isPhysicalDevice) {
+//         rqs:
+//         switch (await permission.status) {
+//           case PermissionStatus.denied:
+//           case PermissionStatus.permanentlyDenied:
+//             switch (await permission.request()) {
+//               case PermissionStatus.denied:
+//               case PermissionStatus.permanentlyDenied:
+//                 checkPermissionStatus(permission);
+//                 break;
+//               default:
+//                 break rqs;
+//             }
+//             break;
+//           default:
+//             break rqs;
+//         }
+//       } else {
+//         log(ini.identifierForVendor);
+//         log(ini.model);
+//         log(ini.localizedModel);
+//         log(ini.name);
+//         log(ini.systemName);
+//         log(ini.systemVersion);
+//         log(ini.utsname.machine);
+//         log(ini.utsname.nodename);
+//         log(ini.utsname.release);
+//         log(ini.utsname.sysname);
+//         log(ini.utsname.version);
+//       }
+//       break;
+//     default:
+//       doNothing();
+//       break;
+//   }
+// }
 
 void hideLoader(Duration time, {LoaderType? type}) {
   Timer(time, () {

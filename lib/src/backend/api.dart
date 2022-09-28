@@ -23,8 +23,9 @@ Iterable<int> getNumbersRecursive(int number) sync* {
   log('generator $number started');
   if (number > 0) {
     yield* getNumbersRecursive(number - 1);
+  } else {
+    yield number;
   }
-  yield number;
   log('generator $number ended');
 }
 

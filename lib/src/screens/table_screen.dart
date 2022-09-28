@@ -1,6 +1,6 @@
+import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 import '../widgets/some_item_list_widget.dart';
-import 'package:grid_test/src/helpers/helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -22,7 +22,7 @@ class HomeScreenState extends State<HomeScreen> {
           width: hp.width,
           child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
+              children: const [
                 Expanded(flex: 2, child: SomeItemListWidget()),
               ])),
     ));

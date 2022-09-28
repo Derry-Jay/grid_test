@@ -54,6 +54,8 @@ dependencies:
   flutter_compass: ^0.7.0
   package_info_plus: ^1.4.2
   device_info_plus: ^4.1.2
+  provider: ^6.0.3
+  permission_handler: ^10.0.0
 
 dev_dependencies:
   flutter_test:

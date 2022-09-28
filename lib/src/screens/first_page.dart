@@ -22,14 +22,15 @@ class FirstPageState extends State<FirstPage> {
           })
         : doNothing();
   }
+
   Widget valueBuilder(BuildContext context, AsyncSnapshot<int> value) {
     return Text(value.data.toString());
   }
 
   Widget mapItem(int i) {
     return Container(
-      width: hp.width / (i * 2),
-      height: hp.height / i,
+      width: hp.width / i,
+      height: hp.height / (i * 2),
       color: hp.theme.dividerColor,
       // padding: const EdgeInsets.only(top: 20, bottom: 15, left: 25, right: 20),
       child: Center(
