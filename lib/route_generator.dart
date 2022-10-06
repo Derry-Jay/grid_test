@@ -1,7 +1,9 @@
-import 'package:grid_test/src/screens/ar_screen.dart';
-import 'package:grid_test/src/screens/map_screen.dart';
-import 'package:grid_test/src/screens/table_screen.dart';
+import 'package:grid_test/src/helpers/helper.dart';
 
+import 'src/screens/ar_screen.dart';
+import 'src/screens/map_screen.dart';
+import 'src/screens/table_screen.dart';
+import 'src/screens/item_list_page.dart';
 import 'src/screens/grid_page.dart';
 import 'src/screens/first_page.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,7 @@ class RouteGenerator {
   Route<dynamic> generateRoute(RouteSettings settings) {
     Widget pageBuilder(BuildContext context) {
       // final args = settings.arguments;
+      log(settings.name);
       switch (settings.name) {
         case '/qr':
           return const QRScanScreen();
@@ -25,6 +28,8 @@ class RouteGenerator {
           return const MapScreen();
         case '/home':
           return const HomeScreen();
+        case '/items':
+          return const ItemListPage();
         default:
           return const FlowScreen();
       }

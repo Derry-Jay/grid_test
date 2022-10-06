@@ -66,14 +66,10 @@ class MyHomePageState extends State<MyHomePage> {
               // horizontal).
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                GestureDetector(
-                  child: const Text(
-                    'You have pushed the button this many times:',
-                  ),
-                  onTap: () async {
-                    hp.goTo('/map');
-                  },
-                ),
+                SelectableText('You have pushed the button this many times:',
+                    onTap: () async {
+                  hp.goTo('/map');
+                }),
                 SelectableText('${model.counter}',
                     style: hp.textTheme.headline4, onTap: () async {
                   hp.goTo('/home');
@@ -85,8 +81,7 @@ class MyHomePageState extends State<MyHomePage> {
                     child: Text(hp.loc.details)),
                 SelectableText(hp.loc.you_must_signin_to_access_to_this_section,
                     onTap: () async {
-                  log(val);
-                  log(map);
+                  hp.goTo('/items');
                 }),
                 ElevatedButton(
                     onPressed: () async {

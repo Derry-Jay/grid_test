@@ -49,7 +49,7 @@ class FirstPageState extends State<FirstPage> {
         idt = Icons.flip_camera_android;
         break;
       case TargetPlatform.iOS:
-        idt = Icons.flip_camera_android;
+        idt = Icons.flip_camera_ios;
         break;
       default:
         break;
@@ -78,22 +78,6 @@ class FirstPageState extends State<FirstPage> {
         //         fit: BoxFit.scaleDown,
         //         height: 32,
         //       ))
-        //   // ,TextFormField(
-        //   //     controller: con.nc,
-        //   //     validator: hp.nameValidator,
-        //   //     decoration: InputDecoration(
-        //   //         contentPadding: EdgeInsets.symmetric(
-        //   //             vertical: hp.height / 100, horizontal: hp.width / 40),
-        //   //         border: const OutlineInputBorder(),
-        //   //         hintText: hp.loc.full_name)),
-        //   // TextFormField(
-        //   //     controller: con.dc,
-        //   //     validator: hp.descriptionValidator,
-        //   //     decoration: InputDecoration(
-        //   //         contentPadding: EdgeInsets.symmetric(
-        //   //             vertical: hp.height / 100, horizontal: hp.width / 40),
-        //   //         border: const OutlineInputBorder(),
-        //   //         hintText: hp.loc.description))
         // ]),
         // title: Image.asset('assets/images/logo.jpg',
         //     fit: BoxFit.fill, height: hp.height / 20),

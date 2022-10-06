@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:grid_test/src/screens/item_list_page.dart';
 import 'generated/l10n.dart';
 import 'src/backend/api.dart';
 import 'src/helpers/helper.dart';
@@ -10,13 +11,30 @@ import 'package:grid_test/src/widgets/empty_widget.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'dart:ffi';
+import 'dart:io';
+
+import 'package:sqlite3/open.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 void main() async {
   try {
     wb = WidgetsFlutterBinding.ensureInitialized();
     gc = await GlobalConfiguration().loadFromAsset('configurations');
-    if (!(wb?.buildOwner?.debugBuilding ?? true)) {
-      // getLocationPermission();
+    if (wb?.buildOwner?.debugBuilding ?? true) {
+      throw Exception();
+    } else {
+      //     final db = sqlite3.openInMemory();
+      //     db.execute('''
+      //   CREATE TABLE IF NOT EXISTS users (
+      //     id INTEGER NOT NULL AUTO INCREMENT PRIMARY KEY,
+      //     name TEXT NOT NULL,
+      //     email TEXT NOT NULL,
+      //     mobile TEXT NOT NULL,
+      //     gender TEXT NOT NULL,
+      //     token TEXT UNIQUE
+      //   );
+      // ''');
       getGPSPermission();
       log('####################');
       log(gc?.getValue('page') == gc?.getValue('total'));
@@ -51,11 +69,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'Flutter Demo',
         locale: model.appLocal,
+        home: const ItemListPage(),
         onGenerateRoute: rg.generateRoute,
         debugShowCheckedModeBanner: kDebugMode,
         supportedLocales: S.delegate.supportedLocales,
-        home: StreamBuilder<ConnectivityResult>(
-            builder: rootBuilder, stream: conn.onConnectivityChanged),
+        // home: StreamBuilder<ConnectivityResult>(
+        //     builder: rootBuilder, stream: conn.onConnectivityChanged),
         theme: ThemeData(
             // This is the theme of your application.
             //

@@ -78,6 +78,13 @@ Completer<GoogleMapController> completer = Completer<GoogleMapController>();
 
 DeviceInfoPlugin dip = DeviceInfoPlugin();
 
+TextEditingController nc = TextEditingController(),
+    mc = TextEditingController(),
+    pc = TextEditingController(),
+    sc = TextEditingController();
+
+GlobalKey<FormState> fk = GlobalKey<FormState>();
+
 enum LoaderType {
   normal,
   rotatingPlain,
@@ -677,7 +684,8 @@ class Helper extends ChangeNotifier {
   S get loc => S.of(buildContext);
   ThemeData get theme => Theme.of(buildContext);
   OverlayState? get ol => Overlay.of(buildContext);
-  NavigatorState get nav => Navigator.of(buildContext);
+  NavigatorState get nav =>
+      Navigator.maybeOf(buildContext) ?? Navigator.of(buildContext);
   MediaQueryData get dimensions =>
       MediaQuery.maybeOf(buildContext) ?? MediaQuery.of(buildContext);
   ModalRoute<Object?>? get route => ModalRoute.of(buildContext);
@@ -748,13 +756,13 @@ class Helper extends ChangeNotifier {
 
   Future<bool> onWillPop() async {
     DateTime now = DateTime.now();
-    if (currentBackPressTime != null &&
-        now.difference(currentBackPressTime!) > const Duration(seconds: 2)) {
+    if (now.difference(currentBackPressTime ?? now) >
+        const Duration(seconds: 2)) {
       currentBackPressTime = now;
       final p = await Fluttertoast.showToast(msg: loc.tapAgainToLeave) ?? true;
       return Future.value(!p);
     }
-    SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+    await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
     return Future.value(true);
   }
 

@@ -56,10 +56,14 @@ class CircularLoaderState extends State<CircularLoader>
   }
 
   void listenAnimationStatus(AnimationStatus status) {
-    if ((status == AnimationStatus.dismissed ||
-            status == AnimationStatus.completed) &&
-        mounted) {
-      dispose();
+    switch (status) {
+      case AnimationStatus.completed:
+      case AnimationStatus.dismissed:
+        dispose();
+        break;
+      default:
+        doNothing();
+        break;
     }
   }
 

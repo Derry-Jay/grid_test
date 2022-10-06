@@ -30,6 +30,7 @@ class MapWidget extends StatelessWidget {
 
   void cameraMovement(CameraPosition position) async {
     log(position.target);
+    await mapCon?.animateCamera(CameraUpdate.newCameraPosition(position));
   }
 
   Widget mapBuilder(BuildContext context, AsyncSnapshot<LocationData> region) {

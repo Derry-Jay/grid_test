@@ -144,3 +144,14 @@ Future<Map<String, dynamic>> obtainMap() async {
     return <String, dynamic>{};
   }
 }
+
+Future<String> sendData(Map<String, dynamic> map) async {
+  try {
+    return (await Client()
+            .post(Uri.tryParse('https://crudcrud.com/api/') ?? Uri()))
+        .body;
+  } catch (e) {
+    log(e);
+    return '';
+  }
+}
