@@ -1,21 +1,21 @@
-import 'package:flutter/foundation.dart';
-import 'package:grid_test/src/screens/item_list_page.dart';
 import 'generated/l10n.dart';
 import 'src/backend/api.dart';
 import 'src/helpers/helper.dart';
 import 'src/screens/home_page.dart';
+import 'src/screens/empty_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'src/widgets/circular_loader.dart';
 import 'src/models/scope_model_wrapper.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'package:grid_test/src/widgets/empty_widget.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'dart:ffi';
-import 'dart:io';
-
-import 'package:sqlite3/open.dart';
-import 'package:sqlite3/sqlite3.dart';
+// import 'dart:ffi';
+// import 'dart:io';
+//
+// import 'package:sqlite3/open.dart';
+// import 'package:sqlite3/sqlite3.dart';
 
 void main() async {
   try {
@@ -55,26 +55,44 @@ class MyApp extends StatelessWidget {
     Widget rootBuilder(
         BuildContext context, AsyncSnapshot<ConnectivityResult> result) {
       final hpr = Helper.of(context);
-      if (result.connectionState == ConnectionState.active ||
-          result.connectionState == ConnectionState.done) {
-        hpr.getConnectStatus();
+      try {
+        switch (result.connectionState) {
+          case ConnectionState.active:
+          case ConnectionState.done:
+            if (result.hasData && !result.hasError) {
+              switch (result.data) {
+                case ConnectivityResult.none:
+                  hpr.getConnectStatus();
+                  return const EmptyScreen();
+                default:
+                  return MyHomePage(model: model);
+              }
+            } else {
+              return const EmptyScreen();
+            }
+          case ConnectionState.none:
+            return const EmptyScreen();
+          default:
+            return Scaffold(
+                body: CircularLoader(
+                    color: hpr.theme.primaryColor,
+                    duration: const Duration(seconds: 10)));
+        }
+      } catch (e) {
+        log(e);
+        return const EmptyScreen();
       }
-      return result.hasData &&
-              !result.hasError &&
-              result.data != ConnectivityResult.none
-          ? MyHomePage(model: model)
-          : const Scaffold(body: EmptyWidget());
     }
 
     return MaterialApp(
         title: 'Flutter Demo',
         locale: model.appLocal,
-        home: const ItemListPage(),
+        // home: const ItemListPage(),
         onGenerateRoute: rg.generateRoute,
         debugShowCheckedModeBanner: kDebugMode,
         supportedLocales: S.delegate.supportedLocales,
-        // home: StreamBuilder<ConnectivityResult>(
-        //     builder: rootBuilder, stream: conn.onConnectivityChanged),
+        home: StreamBuilder<ConnectivityResult>(
+            builder: rootBuilder, stream: conn.onConnectivityChanged),
         theme: ThemeData(
             // This is the theme of your application.
             //
@@ -91,8 +109,8 @@ class MyApp extends StatelessWidget {
             scaffoldBackgroundColor: Colors.white),
         localizationsDelegates: const [
           S.delegate,
-          GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate
         ]);
   }

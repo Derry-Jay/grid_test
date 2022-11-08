@@ -54,18 +54,17 @@ class GridItemWidgetState extends State<GridItemWidget> {
                   Expanded(
                       flex: 2,
                       child: Text(widget.item.title,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700, color: Colors.grey)))
+                          style: hp.textTheme.bodyMedium))
                 ],
               )),
           onTap: () {
-            // gps!.setState(() {
-            //   if (gps!.flags.contains(true)) {
-            //     gps!.flags[gps!.flags.indexOf(true)] = false;
-            //   }
-            //   gps!.flags[widget.index] = true;
-            // });
-            // log(gps!.flags);
+            gws?.gps?.setState(() {
+              if (gws?.gps?.flags.contains(true) ?? false) {
+                gws?.gps?.flags[gws?.gps?.flags.indexOf(true) ?? widget.index] = false;
+              }
+              gws?.gps?.flags[widget.index] = true;
+            });
+            log(gws?.gps?.flags);
           });
     } catch (e) {
       log(e);

@@ -1,12 +1,11 @@
-import 'package:grid_test/src/helpers/helper.dart';
-import 'package:grid_test/src/widgets/empty_widget.dart';
-
-import 'circular_loader.dart';
+import 'empty_widget.dart';
 import '../backend/api.dart';
+import 'circular_loader.dart';
+import 'grid_item_widget.dart';
+import '../helpers/helper.dart';
 import '../models/some_item.dart';
 import '../screens/grid_page.dart';
 import 'package:flutter/material.dart';
-import '../widgets/grid_item_widget.dart';
 
 class GridWidget extends StatefulWidget {
   const GridWidget({Key? key}) : super(key: key);
@@ -22,6 +21,7 @@ class GridWidgetState extends State<GridWidget> {
   GridPageState? get gps => GridWidget.of(context);
   Widget gridBuilder(
       BuildContext context, AsyncSnapshot<List<SomeItem>> items) {
+    final hp = Helper.of(context);
     Widget itemBuilder(BuildContext context, int index) {
       try {
         return GridItemWidget(
@@ -32,28 +32,36 @@ class GridWidgetState extends State<GridWidget> {
       }
     }
 
-    if (gps?.flags.isEmpty ?? false) {
-      gps?.flags = List<bool>.filled(items.data?.length ?? 0, false);
-    }
-
     // log(largestFactorUnderTen(200));
 
     try {
-      return items.hasData &&
-              !items.hasError &&
-              (items.data?.isNotEmpty ?? false)
-          ? GridView.builder(
-              itemCount: items.data?.length,
-              itemBuilder: itemBuilder,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount:
-                      largestFactorUnderTen(items.data?.length ?? 2) < 2
-                          ? 2
-                          : largestFactorUnderTen(items.data?.length ?? 2)))
-          : (!items.hasData || items.hasError
-              ? const CircularLoader(
-                  color: Colors.blue, duration: Duration(seconds: 5))
-              : const Text('Nothing Found'));
+      switch (items.connectionState) {
+        case ConnectionState.done:
+          if (items.hasData && !items.hasError) {
+            if ((gps?.flags.isEmpty ?? true) &&
+                (items.data?.isNotEmpty ?? false)) {
+              gps?.flags = List<bool>.filled(items.data?.length ?? 0, false);
+            }
+            return items.data?.isNotEmpty ?? false
+                ? GridView.builder(
+                    itemBuilder: itemBuilder,
+                    itemCount: items.data?.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4))
+                : const Text('Nothing');
+          } else if (items.hasError) {
+            return Text(items.error?.toString() ?? '');
+          } else {
+            return const EmptyWidget();
+          }
+        case ConnectionState.none:
+          return const EmptyWidget();
+        default:
+          return CircularLoader(
+              color: hp.theme.primaryColor,
+              duration: const Duration(seconds: 5));
+      }
     } catch (e) {
       log(e);
       return const EmptyWidget();

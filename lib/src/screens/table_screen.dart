@@ -1,6 +1,6 @@
+import '../backend/api.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
-import '../widgets/some_item_list_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -12,6 +12,20 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   Helper get hp => Helper.of(context);
 
+  Widget mapItem(int i) {
+    return Container(
+      width: hp.width / i,
+      height: hp.height / (i * 2),
+      color: hp.theme.dividerColor,
+      // padding: const EdgeInsets.only(top: 20, bottom: 15, left: 25, right: 20),
+      child: Center(
+        child: Text(i.toString(),
+            style:
+                TextStyle(color: hp.theme.toggleableActiveColor, fontSize: 20)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -22,8 +36,11 @@ class HomeScreenState extends State<HomeScreen> {
           width: hp.width,
           child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
-                Expanded(flex: 2, child: SomeItemListWidget()),
+              children: [
+                Expanded(
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: getNumbers(3).map<Widget>(mapItem).toList())),
               ])),
     ));
   }

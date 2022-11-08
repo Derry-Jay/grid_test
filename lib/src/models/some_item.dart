@@ -1,7 +1,7 @@
 class SomeItem {
-  final int itemID, userID;
   final String title;
   final bool completed;
+  final int itemID, userID;
 
   SomeItem(this.itemID, this.userID, this.title, this.completed);
 

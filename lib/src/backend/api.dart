@@ -1,15 +1,22 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:convert';
+import '../models/base.dart';
+import '../models/product.dart';
 import 'package:http/http.dart';
 import '../helpers/helper.dart';
 import '../models/some_item.dart';
-import 'package:flutter/foundation.dart';
 import 'package:global_configuration/global_configuration.dart';
 
 GlobalConfiguration? gc;
 final httpClient = HttpClient();
-ValueNotifier<List<int>?> bytes = ValueNotifier(null);
+StreamController<List<Product>> productsController =
+    StreamController<List<Product>>.broadcast(onListen: () {
+  log('listening');
+}, onCancel: () {
+  log('cancel');
+});
 
 Iterable<int> getNumbers(int number) sync* {
   log('generator started');
@@ -86,45 +93,40 @@ Future<List<SomeItem>> obtainData() async {
   }
 }
 
-Future<String> downloadFile(String url, String fileName, String dir) async {
-  HttpClient httpClient = HttpClient();
-  File file;
-  String filePath = '';
-  String myUrl = '';
+void getProducts(int seconds) async {
   try {
-    myUrl = '$url/$fileName';
-    final request = await httpClient.getUrl(Uri.parse(myUrl));
-    final response = await request.close();
-    if (response.statusCode == 200) {
-      final bytes = await consolidateHttpClientResponseBytes(response);
-      filePath = '$dir/$fileName';
-      file = File(filePath);
-      final byteFile = await file.writeAsBytes(bytes);
-      log(byteFile.path);
-    } else {
-      filePath = 'Error code: ${response.statusCode}';
-    }
+    await Future.delayed(Duration(seconds: seconds), () async {
+      final cl = Client();
+      final res = await cl.get(
+          Uri.tryParse('https://api.escuelajs.co/api/v1/products') ?? Uri());
+      cl.close();
+      final list = List<Map<String, dynamic>>.from(json.decode(res.body))
+          .map<Product>(Product.fromMap)
+          .toList();
+      log(list.length);
+      list.isEmpty
+          ? doNothing()
+          : productsController.add(list);
+      // : productsController.sink.add(list);
+    });
   } catch (e) {
     log(e);
-    filePath = 'Can not fetch url';
   }
-
-  return filePath;
 }
 
-Future<Map<String, dynamic>> getMap() async {
+Future<Base> getData() async {
   try {
-    final request = await httpClient
-        .getUrl(Uri.tryParse('http://127.0.0.1:8000/') ?? Uri());
+    final request = await httpClient.getUrl(
+        Uri.tryParse('https://jsonplaceholder.typicode.com/users') ?? Uri());
     final response = await request.close();
     final resStr = await response.transform(utf8.decoder).join();
     log(resStr);
     return response.statusCode == 200
-        ? json.decode(resStr) as Map<String, dynamic>
-        : <String, dynamic>{};
+        ? Base.fromMap(json.decode(resStr))
+        : Base.emptyBase;
   } catch (e) {
     log(e);
-    return <String, dynamic>{};
+    return Base.emptyBase;
   }
 }
 

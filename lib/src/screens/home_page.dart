@@ -1,4 +1,3 @@
-import '../backend/api.dart';
 import '../models/cart.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
@@ -26,9 +25,10 @@ class MyHomePageState extends State<MyHomePage> {
   Map<String, dynamic>? val, map;
   Helper get hp => Helper.of(context);
 
-  void setData() async {
+  void setData() //async
+  {
     // val = await getMap();
-    map = await obtainMap();
+    // map = await obtainMap();
     mounted ? setState(() {}) : log('unmounted');
   }
 
@@ -38,7 +38,9 @@ class MyHomePageState extends State<MyHomePage> {
           appBar: AppBar(
               // Here we take the value from the MyHomePage object that was created by
               // the App.build method, and use it to set our appbar title.
-              title: Text(hp.loc.description),
+              title: SelectableText(hp.loc.description, onTap: () async {
+                hp.goTo('/products');
+              }),
               actions: [
                 IconButton(
                     onPressed: () async {
@@ -75,9 +77,7 @@ class MyHomePageState extends State<MyHomePage> {
                   hp.goTo('/home');
                 }),
                 ElevatedButton(
-                    onPressed: () async {
-                      widget.model.changeDirection();
-                    },
+                    onPressed: widget.model.changeDirection,
                     child: Text(hp.loc.details)),
                 SelectableText(hp.loc.you_must_signin_to_access_to_this_section,
                     onTap: () async {
