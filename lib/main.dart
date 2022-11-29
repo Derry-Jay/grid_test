@@ -1,8 +1,10 @@
+// import 'package:grid_test/src/screens/table_screen.dart';
+
 import 'generated/l10n.dart';
 import 'src/backend/api.dart';
 import 'src/helpers/helper.dart';
-import 'src/screens/home_page.dart';
 import 'src/screens/empty_screen.dart';
+import 'src/screens/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'src/widgets/circular_loader.dart';
@@ -64,6 +66,8 @@ class MyApp extends StatelessWidget {
                 case ConnectivityResult.none:
                   hpr.getConnectStatus();
                   return const EmptyScreen();
+                // default:
+                //   return const IntroScreen();
                 default:
                   return MyHomePage(model: model);
               }
@@ -87,12 +91,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'Flutter Demo',
         locale: model.appLocal,
-        // home: const ItemListPage(),
+        // home: const EmptyScreen(),
         onGenerateRoute: rg.generateRoute,
         debugShowCheckedModeBanner: kDebugMode,
         supportedLocales: S.delegate.supportedLocales,
         home: StreamBuilder<ConnectivityResult>(
             builder: rootBuilder, stream: conn.onConnectivityChanged),
+        localizationsDelegates: const [
+          S.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate
+        ],
         theme: ThemeData(
             // This is the theme of your application.
             //
@@ -106,13 +116,7 @@ class MyApp extends StatelessWidget {
             hintColor: Colors.grey,
             primarySwatch: Colors.blue,
             secondaryHeaderColor: Colors.black,
-            scaffoldBackgroundColor: Colors.white),
-        localizationsDelegates: const [
-          S.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate
-        ]);
+            scaffoldBackgroundColor: Colors.white));
   }
 
   // This widget is the root of your application.

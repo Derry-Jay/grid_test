@@ -74,14 +74,14 @@ class AddUserScreenState extends State<AddUserScreen> {
                       CustomButton(
                         type: ButtonType.text,
                         onPressed: () async {
-                          final prefs = await sharedPrefs;
-                          fk.currentState?.save();
-                          log(map);
-                          final str = await sendData(map);
-                          final p = await revealToast(str);
-                          log(await prefs.setString('token', str) && p
-                              ? str
-                              : '');
+                          // final prefs = await sharedPrefs;
+                          // fk.currentState?.save();
+                          // log(map);
+                          // final str = await sendData(map);
+                          // final p = await revealToast(str);
+                          // log(await prefs.setString('token', str) && p
+                          //     ? str
+                          //     : '');
                         },
                         child: Text(hp.loc.register),
                       )

@@ -17,7 +17,13 @@ class ProductGridWidget extends StatefulWidget {
 class ProductGridWidgetState extends State<ProductGridWidget> {
   StreamSubscription<List<Product>>? psc;
   void customDispose() async {
-    await psc?.cancel();
+    try {
+      log('Stopping listening for Product List.....');
+      await psc?.cancel();
+      log('Stopped listening to Product List');
+    } catch (e) {
+      log(e);
+    }
   }
 
   Widget gridBuilder(
@@ -32,11 +38,20 @@ class ProductGridWidgetState extends State<ProductGridWidget> {
       log(products.connectionState);
       switch (products.connectionState) {
         case ConnectionState.done:
-          if (products.hasData && !products.hasError) {
+        case ConnectionState.active:
+          if (products.hasData &&
+              !products.hasError &&
+              (products.data?.isNotEmpty ?? false)) {
             return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2),
-                itemBuilder: getItem);
+                itemBuilder: getItem,
+                itemCount: products.data?.length,
+                padding: EdgeInsets.symmetric(
+                    vertical: hp.height / 40, horizontal: hp.width / 20),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    mainAxisSpacing: hp.height / 32,
+                    crossAxisSpacing: hp.width / 16,
+                    childAspectRatio: (hp.width * 1.28) / hp.height,
+                    crossAxisCount: 2));
           } else if (products.hasError) {
             return SelectableText(products.error?.toString() ?? '');
           } else {
@@ -51,7 +66,7 @@ class ProductGridWidgetState extends State<ProductGridWidget> {
       }
     } catch (e) {
       log(e);
-      return const EmptyWidget();
+      return SelectableText(e.toString());
     }
   }
 
@@ -67,7 +82,10 @@ class ProductGridWidgetState extends State<ProductGridWidget> {
     // TODO: implement initState
     super.initState();
     psc = productsController.stream.listen((event) {
+      log('++++++++++++++++');
       log(event.length);
+      getProducts(6);
+      log('================');
     }, onDone: () {
       log('done');
     });

@@ -73,14 +73,14 @@ class AddProjectScreenState extends State<AddProjectScreen> {
                       CustomButton(
                         type: ButtonType.text,
                         onPressed: () async {
-                          final prefs = await sharedPrefs;
-                          fk.currentState?.save();
-                          log(map);
-                          final str = await sendData(map);
-                          log(await prefs.setString('token', str) &&
-                                  await revealToast(str)
-                              ? str
-                              : '');
+                          // final prefs = await sharedPrefs;
+                          // fk.currentState?.save();
+                          // log(map);
+                          // final str = await sendData(map);
+                          // log(await prefs.setString('token', str) &&
+                          //         await revealToast(str)
+                          //     ? str
+                          //     : '');
                         },
                         child: Text(hp.loc.register),
                       )

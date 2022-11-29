@@ -8,8 +8,8 @@ class ProductCategory {
   static ProductCategory emptyCategory = ProductCategory(-1, '', '');
   factory ProductCategory.fromMap(Map<String, dynamic> map) {
     try {
-      return ProductCategory(
-          map['id'] ?? -1, map['name'] ?? '', map['image'] ?? '');
+      return ProductCategory(map['id'] ?? (map['_id'] ?? -1), map['name'] ?? '',
+          map['image'] ?? '');
     } catch (e) {
       log(e);
       return ProductCategory.emptyCategory;

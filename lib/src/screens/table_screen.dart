@@ -1,15 +1,14 @@
-import '../backend/api.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class IntroScreen extends StatefulWidget {
+  const IntroScreen({Key? key}) : super(key: key);
 
   @override
-  HomeScreenState createState() => HomeScreenState();
+  IntroScreenState createState() => IntroScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class IntroScreenState extends State<IntroScreen> {
   Helper get hp => Helper.of(context);
 
   Widget mapItem(int i) {
@@ -30,18 +29,21 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-      appBar: AppBar(title: const Text('Rotator')),
-      body: SizedBox(
-          height: hp.height,
-          width: hp.width,
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: getNumbers(3).map<Widget>(mapItem).toList())),
-              ])),
-    ));
+            appBar: AppBar(title: const Text('Intro')),
+            // body: SizedBox(
+            //     height: hp.height,
+            //     width: hp.width,
+            //     child: Column(
+            //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+            //         children: [
+            //           Expanded(
+            //               child: Row(
+            //                   mainAxisAlignment: MainAxisAlignment.spaceAround,
+            //                   children: getNumbers(3).map<Widget>(mapItem).toList())),
+            //         ])),
+            body: Center(
+                child: SelectableText('Tap Here to View States', onTap: () {
+              hp.goTo('/states');
+            }))));
   }
 }

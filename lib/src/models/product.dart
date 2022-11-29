@@ -11,10 +11,12 @@ class Product {
       this.price, this.images);
   static Product emptyProduct =
       Product(-1, '', '', ProductCategory.emptyCategory, -1, <String>[]);
+  bool get isEmpty => this == Product.emptyProduct;
+  bool get isNotEmpty => !isEmpty;
   factory Product.fromMap(Map<String, dynamic> map) {
     try {
       return Product(
-          map['id'] ?? -1,
+          map['id'] ?? (map['_id'] ?? -1),
           map['title'] ?? '',
           map['description'] ?? '',
           ProductCategory.fromMap(map['category'] ?? <String, dynamic>{}),
@@ -25,4 +27,16 @@ class Product {
       return Product.emptyProduct;
     }
   }
+
+  @override
+  bool operator ==(Object other) {
+    log(other);
+    return other is Product &&
+        productID == other.productID &&
+        category == other.category;
+  }
+
+  @override
+  // TODO: implement hashCode
+  int get hashCode => productID.hashCode + category.productCategoryID.hashCode;
 }

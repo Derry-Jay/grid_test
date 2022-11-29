@@ -1,3 +1,5 @@
+import 'package:grid_test/src/models/route_argument.dart';
+
 import '../models/cart.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +46,8 @@ class MyHomePageState extends State<MyHomePage> {
               actions: [
                 IconButton(
                     onPressed: () async {
-                      hp.goTo('/first');
+                      hp.goTo('/first',
+                          args: RouteArgument(type: TransitionType.decorative));
                     },
                     icon: const Icon(Icons.arrow_forward_ios))
               ]),
@@ -85,7 +88,9 @@ class MyHomePageState extends State<MyHomePage> {
                 }),
                 ElevatedButton(
                     onPressed: () async {
-                      hp.goTo('/ar');
+                      // log(int.tryParse('0x61ab420c0f34753bcedfa787'));
+                      // log('61ab420c0f34753bcedfa787'.length);
+                      hp.goTo('/states');
                     },
                     child: const Text('ARKit'))
               ],

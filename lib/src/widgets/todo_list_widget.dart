@@ -1,30 +1,29 @@
 import '../helpers/helper.dart';
+import '../models/todo.dart';
 import '../widgets/circular_loader.dart';
 
 import '../backend/api.dart';
-import 'some_item_widget.dart';
-import '../models/some_item.dart';
+import 'todo_widget.dart';
 import '../screens/first_page.dart';
 import 'package:flutter/material.dart';
 
-class SomeItemListWidget extends StatefulWidget {
-  const SomeItemListWidget({Key? key}) : super(key: key);
+class TodoListWidget extends StatefulWidget {
+  const TodoListWidget({Key? key}) : super(key: key);
 
   @override
-  SomeItemListWidgetState createState() => SomeItemListWidgetState();
+  TodoListWidgetState createState() => TodoListWidgetState();
 
   static FirstPageState? of(BuildContext context) =>
       context.findAncestorStateOfType<FirstPageState>();
 }
 
-class SomeItemListWidgetState extends State<SomeItemListWidget> {
-  FirstPageState? get fps => SomeItemListWidget.of(context);
-  Widget listBuilder(
-      BuildContext context, AsyncSnapshot<List<SomeItem>> items) {
+class TodoListWidgetState extends State<TodoListWidget> {
+  FirstPageState? get fps => TodoListWidget.of(context);
+  Widget listBuilder(BuildContext context, AsyncSnapshot<List<Todo>> items) {
     log(items.data);
     Widget getItem(BuildContext context, int index) {
-      return SomeItemWidget(
-          item: items.data?[index] ?? SomeItem.emptyItem, index: index);
+      return TodoWidget(
+          item: items.data?[index] ?? Todo.emptyTodo, index: index);
     }
 
     return items.hasData && !items.hasError && (items.data?.isNotEmpty ?? false)
@@ -37,7 +36,7 @@ class SomeItemListWidgetState extends State<SomeItemListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<SomeItem>>(
+    return StreamBuilder<List<Todo>>(
         builder: listBuilder, stream: receiveData(const Duration(seconds: 5)));
   }
 }

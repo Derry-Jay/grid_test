@@ -1,32 +1,18 @@
-import 'user.dart';
-import 'company.dart';
-import 'where_abouts.dart';
 import '../helpers/helper.dart';
 
 class Base {
-  final List<User> users;
-  final List<Company> companies;
-  final List<WhereAbouts> addresses;
+  final int status;
+  final String message;
+  final List<dynamic> data;
 
-  Base(this.users, this.companies, this.addresses);
+  Base(this.status, this.message, this.data);
 
-  static Base emptyBase = Base(<User>[], <Company>[], <WhereAbouts>[]);
+  static Base emptyBase = Base(404, '', []);
 
-  factory Base.fromMap(List ls) {
+  factory Base.fromMap(Map<String, dynamic> map) {
     try {
-      final list = List<Map<String, dynamic>>.from(ls);
-      if (list.isNotEmpty) {
-        List<Company> cl = <Company>[];
-        List<WhereAbouts> al = <WhereAbouts>[];
-        final ul = list.map<User>(User.fromMap).toList();
-        for (User element in ul) {
-          cl.contains(element.company) ? doNothing() : cl.add(element.company);
-          al.add(element.address);
-        }
-        return Base(ul, cl, al);
-      } else {
-        return Base.emptyBase;
-      }
+      return Base(map['status'] ?? 404, map['message'] ?? '',
+          (map['data'] as List?) ?? []);
     } catch (e) {
       log(e);
       return Base.emptyBase;
