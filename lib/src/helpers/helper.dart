@@ -555,18 +555,16 @@ Uint8List fromIntList(List<int> list) {
 }
 
 double haversineDistance(LatLng a, LatLng b) {
-  double dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
-  double dLong = ((b.longitude - a.longitude).abs() * 11) / 630;
-  final v1 = 1 + cos(dLat);
-  final v2 = 2 *
-      cos((a.latitude * 11) / 630) *
-      cos((b.latitude * 11) / 630) *
-      cos(dLong);
-  return (12.742 * asin(sqrt(((v1 - v2).abs()) / 2)));
+  final dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
+  final dLong = ((b.longitude - a.longitude).abs() * 11) / 630;
+  final sLat = ((b.latitude + a.latitude) * 11) / 630;
+  final v1 = cos(sLat);
+  final v2 = cos(dLong) * (v1 + cos(dLat));
+  final v = v2 - v1;
+  return (12735 * atan2(sqrt(1 - v), sqrt(1 + v)));
 }
 
 double getAngle(LatLng a, LatLng b) {
-  // double dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
   double dLon = ((b.longitude - a.longitude).abs() * 11) / 630;
   final y = sin(dLon) * cos(b.longitude);
   final x = cos(a.latitude) * sin(b.latitude) -

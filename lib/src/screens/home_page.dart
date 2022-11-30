@@ -1,3 +1,4 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:grid_test/src/models/route_argument.dart';
 
 import '../models/cart.dart';
@@ -88,9 +89,10 @@ class MyHomePageState extends State<MyHomePage> {
                 }),
                 ElevatedButton(
                     onPressed: () async {
-                      // log(int.tryParse('0x61ab420c0f34753bcedfa787'));
-                      // log('61ab420c0f34753bcedfa787'.length);
-                      hp.goTo('/states');
+                      log('Haversine');
+                      log(haversineDistance(LatLng(12.827313, 80.1652452),
+                          LatLng(12.9809919, 80.2096608)));
+                      // hp.goTo('/states');
                     },
                     child: const Text('ARKit'))
               ],
@@ -104,12 +106,12 @@ class MyHomePageState extends State<MyHomePage> {
         );
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    setData();
-  }
+  // @override
+  // void initState() {
+  //   // TODO: implement initState
+  //   super.initState();
+  //   setData();
+  // }
 
   @override
   Widget build(BuildContext context) {
