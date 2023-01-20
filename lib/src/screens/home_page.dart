@@ -38,7 +38,9 @@ class MyHomePageState extends State<MyHomePage> {
           appBar: AppBar(
               // Here we take the value from the MyHomePage object that was created by
               // the App.build method, and use it to set our appbar title.
-              title: Text(hp.loc.description),
+              title: SelectableText(hp.loc.description, onTap: () async {
+                hp.goTo('/qr');
+              }),
               actions: [
                 IconButton(
                     onPressed: () async {
@@ -67,7 +69,7 @@ class MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 GestureDetector(
-                  child: const Text(
+                  child: const SelectableText(
                     'You have pushed the button this many times:',
                   ),
                   onTap: () async {

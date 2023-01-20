@@ -31,7 +31,6 @@ class SomeItemWidgetState extends State<SomeItemWidget> {
                 width: hp.width,
                 height: hp.height / 8,
                 child: Column(
-                    // mainAxisAlignment:,
                     children: [
                       Row(children: [
                         Container(

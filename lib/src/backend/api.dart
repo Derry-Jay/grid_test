@@ -65,15 +65,8 @@ Future<List<SomeItem>> obtainData() async {
     final url =
         Uri.tryParse('https://jsonplaceholder.typicode.com/todos') ?? Uri();
     final response = await client.get(url);
-    // client.close();
     log(response.statusCode);
     log(response.body);
-    // Map<String, dynamic> userMap = json.decode(response.body);
-    // // var deliverystock = ShowNotification.fromMap(userMap);
-    // // return deliverystock;
-    // return response.statusCode == 200
-    //     ? Reply.fromMap(userMap)
-    //     : Reply.emptyReply;
     return response.statusCode == 200
         ? List<Map<String, dynamic>>.from(json.decode(response.body))
             .map<SomeItem>(SomeItem.fromMap)

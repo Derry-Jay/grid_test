@@ -78,6 +78,8 @@ Completer<GoogleMapController> completer = Completer<GoogleMapController>();
 
 DeviceInfoPlugin dip = DeviceInfoPlugin();
 
+Stopwatch st = Stopwatch();
+
 enum LoaderType {
   normal,
   rotatingPlain,
