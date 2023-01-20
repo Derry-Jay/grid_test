@@ -3,15 +3,29 @@ import 'package:grid_test/src/widgets/custom_button.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class IntroScreen extends StatefulWidget {
+  const IntroScreen({Key? key}) : super(key: key);
 
   @override
-  HomeScreenState createState() => HomeScreenState();
+  IntroScreenState createState() => IntroScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class IntroScreenState extends State<IntroScreen> {
   Helper get hp => Helper.of(context);
+
+  Widget mapItem(int i) {
+    return Container(
+      width: hp.width / i,
+      height: hp.height / (i * 2),
+      color: hp.theme.dividerColor,
+      // padding: const EdgeInsets.only(top: 20, bottom: 15, left: 25, right: 20),
+      child: Center(
+        child: Text(i.toString(),
+            style:
+                TextStyle(color: hp.theme.toggleableActiveColor, fontSize: 20)),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -27,7 +27,7 @@ class ItemWidget extends StatelessWidget {
                         BorderRadius.all(Radius.circular(hp.radius / 100)),
                     image: DecorationImage(
                         image: AssetImage(item.image), fit: BoxFit.contain)))),
-        Text(item.content)
+        Text(item.description)
       ],
     );
   }

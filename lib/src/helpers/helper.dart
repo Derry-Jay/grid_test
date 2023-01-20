@@ -79,6 +79,12 @@ Completer<GoogleMapController> completer = Completer<GoogleMapController>();
 DeviceInfoPlugin dip = DeviceInfoPlugin();
 
 Stopwatch st = Stopwatch();
+TextEditingController nc = TextEditingController(),
+    mc = TextEditingController(),
+    pc = TextEditingController(),
+    sc = TextEditingController();
+
+GlobalKey<FormState> fk = GlobalKey<FormState>();
 
 enum LoaderType {
   normal,
@@ -116,12 +122,18 @@ enum ButtonType { raised, text, border }
 
 enum AlertType { normal, cupertino }
 
+enum TransitionType { normal, decorative }
+
 List<Stream<Barcode>> css = <Stream<Barcode>>[];
 
 List<StreamSubscription<Barcode>> scs = <StreamSubscription<Barcode>>[];
 
-void log(Object? object) {
-  if (kDebugMode) print(object);
+void log([Object? object, bool? flag, int? wrapWidth]) {
+  if (kDebugMode) {
+    (flag ?? false)
+        ? debugPrint(object?.toString(), wrapWidth: wrapWidth)
+        : print(object);
+  }
 }
 
 void rollbackOrientations() async {
@@ -194,88 +206,6 @@ void getGPSPermission() async {
   }
 }
 
-// void checkPermissionStatus(Permission permission) async {
-//   switch (defaultTargetPlatform) {
-//     case TargetPlatform.android:
-//       final dro = await dip.androidInfo;
-//       if (dro.isPhysicalDevice ?? false) {
-//         rqs:
-//         switch (await permission.status) {
-//           case PermissionStatus.denied:
-//           case PermissionStatus.permanentlyDenied:
-//             switch (await permission.request()) {
-//               case PermissionStatus.denied:
-//               case PermissionStatus.permanentlyDenied:
-//                 checkPermissionStatus(permission);
-//                 break;
-//               default:
-//                 break rqs;
-//             }
-//             break;
-//           default:
-//             break rqs;
-//         }
-//       } else {
-//         log(dro.id);
-//         log(dro.board);
-//         log(dro.bootloader);
-//         log(dro.brand);
-//         log(dro.device);
-//         log(dro.display);
-//         log(dro.fingerprint);
-//         log(dro.hardware);
-//         log(dro.host);
-//         log(dro.id);
-//         log(dro.manufacturer);
-//         log(dro.version);
-//         log(dro.type);
-//         log(dro.tags);
-//         log(dro.systemFeatures);
-//         log(dro.supported64BitAbis);
-//         log(dro.supported32BitAbis);
-//         log(dro.model);
-//         log(dro.product);
-//       }
-//       break;
-//     case TargetPlatform.iOS:
-//       final ini = await dip.iosInfo;
-//       if (ini.isPhysicalDevice) {
-//         rqs:
-//         switch (await permission.status) {
-//           case PermissionStatus.denied:
-//           case PermissionStatus.permanentlyDenied:
-//             switch (await permission.request()) {
-//               case PermissionStatus.denied:
-//               case PermissionStatus.permanentlyDenied:
-//                 checkPermissionStatus(permission);
-//                 break;
-//               default:
-//                 break rqs;
-//             }
-//             break;
-//           default:
-//             break rqs;
-//         }
-//       } else {
-//         log(ini.identifierForVendor);
-//         log(ini.model);
-//         log(ini.localizedModel);
-//         log(ini.name);
-//         log(ini.systemName);
-//         log(ini.systemVersion);
-//         log(ini.utsname.machine);
-//         log(ini.utsname.nodename);
-//         log(ini.utsname.release);
-//         log(ini.utsname.sysname);
-//         log(ini.utsname.version);
-//       }
-//       break;
-//     default:
-//       doNothing();
-//       break;
-//   }
-// }
-
 void hideLoader(Duration time, {LoaderType? type}) {
   Timer(time, () {
     try {
@@ -299,21 +229,20 @@ bool Function(Route<dynamic>) getRoutePredicate(String routeName) {
 
 OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
   Widget loaderBuilder(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final theme = Theme.of(context);
+    final hp = Helper.of(context);
     return Positioned(
         top: 0,
         left: 0,
-        width: size.width,
-        height: size.height,
+        width: hp.width,
+        height: hp.height,
         child: Material(
-            color: theme.primaryColor.withOpacity(0.85),
+            color: hp.theme.primaryColor.withOpacity(0.85),
             child: CircularLoader(
                 duration: time,
                 loaderType: type,
                 // heightFactor: 16,
                 // widthFactor: 16,
-                color: theme.primaryColor)));
+                color: hp.theme.primaryColor)));
   }
 
   return OverlayEntry(builder: loaderBuilder);
@@ -322,8 +251,8 @@ OverlayEntry overlayLoader(Duration time, {LoaderType? type}) {
 List<String> getFirstAndLastName(String name) {
   List<String> ls = [];
   if (name.isNotEmpty) {
-    ls.add(name.trim().split(' ')[0]);
-    ls.add(name.trim().split(' ')[name.trim().split(' ').length - 1]);
+    ls.add(name.trim().split(' ').first);
+    ls.add(name.trim().split(' ').last);
   }
   return ls;
 }
@@ -344,53 +273,52 @@ Widget errorBuilder(BuildContext context, Object object, StackTrace? trace) {
       size: hpe.height / 16, color: hpe.theme.secondaryHeaderColor);
 }
 
-Widget getPageLoader(Size size) {
-  return Image.asset('${assetImagePath}loading_trend.gif',
-      width: size.width, fit: BoxFit.fill, height: size.height);
+Widget getImageFrameBuilder(
+    BuildContext context, Widget child, int? val, bool flag) {
+  log(flag ? val : 0);
+  return flag && !parseBool(val?.toString())
+      ? child
+      : Image.asset('${assetImagePath}loading.gif',
+          fit: BoxFit.cover, errorBuilder: errorBuilder);
 }
 
-Widget getPageLoader1(Size size) {
-  return Image.asset('${assetImagePath}loader1.gif',
-      width: size.width, fit: BoxFit.fill, height: size.height);
+Widget getNetworkImageLoader(
+    BuildContext context, Widget child, ImageChunkEvent? event) {
+  log('object1');
+  log(event?.cumulativeBytesLoaded);
+  log('%%%%%%%%%');
+  log(event?.expectedTotalBytes);
+  log('object2');
+  return event?.cumulativeBytesLoaded == event?.expectedTotalBytes
+      ? child
+      : Image.asset('${assetImagePath}loading.gif',
+          fit: BoxFit.cover,
+          errorBuilder: errorBuilder,
+          frameBuilder: getImageFrameBuilder);
 }
 
 Widget getPlaceHolder(BuildContext context, String url) {
-  final size = MediaQuery.of(context).size;
+  final hp = Helper.of(context);
   return Image.asset('${assetImagePath}loading.gif',
-      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
+      height: hp.height / 12.8, width: hp.width / 6.4, fit: BoxFit.fill);
 }
 
 Widget getPlaceHolderNoImage(BuildContext context, String url) {
-  final size = MediaQuery.of(context).size;
+  final hp = Helper.of(context);
   return Image.asset('${assetImagePath}noImage.png',
-      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
+      height: hp.height / 12.8, width: hp.width / 6.4, fit: BoxFit.fill);
 }
 
 Widget getErrorWidgetNoImage(BuildContext context, String url, dynamic error) {
-  final size = MediaQuery.of(context).size;
+  final hp = Helper.of(context);
   return Image.asset('${assetImagePath}noImage.png',
-      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
+      height: hp.height / 12.8, width: hp.width / 6.4, fit: BoxFit.fill);
 }
 
 Widget getErrorWidget(BuildContext context, String url, dynamic error) {
-  final size = MediaQuery.of(context).size;
+  final hp = Helper.of(context);
   return Image.asset('${assetImagePath}noImage.png',
-      height: size.height / 12.8, width: size.width / 6.4, fit: BoxFit.fill);
-}
-
-Future<bool> revealToast(String content,
-    {double? fontSize, ToastGravity? gravity, Toast? length}) async {
-  try {
-    final p = await Fluttertoast.showToast(
-            msg: content,
-            fontSize: fontSize,
-            gravity: gravity,
-            toastLength: length) ??
-        false;
-    return p;
-  } catch (e) {
-    rethrow;
-  }
+      height: hp.height / 12.8, width: hp.width / 6.4, fit: BoxFit.fill);
 }
 
 TimeOfDay getTime(String s) {
@@ -469,8 +397,8 @@ bool compareDates(DateTime a, DateTime b) {
       a.microsecond == b.microsecond;
 }
 
-double getTax(num orderamount) {
-  return (5 * orderamount) / 100;
+double getTax(num orderAmount) {
+  return (5 * orderAmount) / 100;
 }
 
 bool predicate(Route<dynamic> route) {
@@ -492,11 +420,6 @@ List<Icon> getStarsList(double rate, {double size = 18}) {
   return list;
 }
 
-Future<List<String>> getLocalStorageKeys() async {
-  final prefs = await sharedPrefs;
-  return prefs.getKeys().toList();
-}
-
 bool parseBool(String? source) {
   return (source?.isNotEmpty ?? false) &&
       (source?.toLowerCase() == 'true' ||
@@ -505,7 +428,7 @@ bool parseBool(String? source) {
           source?.toUpperCase() == 'YES' ||
           source?.toLowerCase() == 'ok' ||
           source?.toUpperCase() == 'OK' ||
-          ((int.tryParse(source ?? '0') ?? 0) > 0));
+          ((int.tryParse(source ?? '-1') ?? -1) > 0));
 }
 
 String limitString(String text, {int limit = 24, String hiddenText = '...'}) {
@@ -540,11 +463,9 @@ Uri getUri(String path) {
 
 Color getColorFromHex(String hex) {
   try {
-    if (hex.contains('#')) {
-      return Color(int.tryParse(hex.replaceAll('#', '0xFF')) ?? 0x00000000);
-    } else {
-      return Color(int.tryParse('0xFF$hex') ?? 0x00000000);
-    }
+    return Color(int.tryParse(
+            hex.contains('#') ? hex.replaceAll('#', '0xFF') : '0xFF$hex') ??
+        0x00000000);
   } catch (e) {
     log(e);
     return const Color(0x00000000);
@@ -606,7 +527,7 @@ List<double> getVector(LatLng point) {
   ];
 }
 
-List<double> getCoords(LatLng point) {
+List<double> getCoordinates(LatLng point) {
   final latRad = (point.latitude * 11) / 630; // convert to radians
   final longRad = (point.longitude * 11) / 630; // convert to radians
   return <double>[(cos(latRad) * cos(longRad)), (cos(latRad) * sin(longRad))];
@@ -619,6 +540,8 @@ double getDoubleData(Map<String, dynamic> data) {
 bool getBoolData(Map<String, dynamic> data) {
   return (data['data'] as bool);
 }
+
+String putDateToString(DateTime dt) => '${dt.month}/${dt.year}';
 
 String getData(List<int> values) {
   return base64.encode(values);
@@ -633,18 +556,16 @@ Uint8List fromIntList(List<int> list) {
 }
 
 double haversineDistance(LatLng a, LatLng b) {
-  double dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
-  double dLong = ((b.longitude - a.longitude).abs() * 11) / 630;
-  final v1 = 1 + cos(dLat);
-  final v2 = 2 *
-      cos((a.latitude * 11) / 630) *
-      cos((b.latitude * 11) / 630) *
-      cos(dLong);
-  return (12.742 * asin(sqrt(((v1 - v2).abs()) / 2)));
+  final dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
+  final dLong = ((b.longitude - a.longitude).abs() * 11) / 630;
+  final sLat = ((b.latitude + a.latitude) * 11) / 630;
+  final v1 = cos(sLat);
+  final v2 = cos(dLong) * (v1 + cos(dLat));
+  final v = v2 - v1;
+  return (12735 * atan2(sqrt(1 - v), sqrt(1 + v)));
 }
 
 double getAngle(LatLng a, LatLng b) {
-  // double dLat = ((b.latitude - a.latitude).abs() * 11) / 630;
   double dLon = ((b.longitude - a.longitude).abs() * 11) / 630;
   final y = sin(dLon) * cos(b.longitude);
   final x = cos(a.latitude) * sin(b.latitude) -
@@ -662,27 +583,65 @@ Widget imageFromBytesBuilder(
   }
 }
 
-Future<Uint8List> getBytesFromAsset(String path, {int? width}) async {
-  ByteData data = await rootBundle.load(path);
-  final codec = await instantiateImageCodec(data.buffer.asUint8List(),
-      targetWidth: width);
-  FrameInfo fi = await codec.getNextFrame();
-  return (await fi.image.toByteData(format: ImageByteFormat.png))!
-      .buffer
-      .asUint8List();
+Future<bool> isRealDevice() async {
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.android:
+      final dro = await dip.androidInfo;
+      return dro.isPhysicalDevice ?? false;
+    case TargetPlatform.iOS:
+      final ini = await dip.iosInfo;
+      return ini.isPhysicalDevice;
+    default:
+      return true;
+  }
 }
 
-String putDateToString(DateTime dt) => '${dt.month}/${dt.year}';
+Future<bool> revealToast(String content,
+    {double? fontSize, ToastGravity? gravity, Toast? length}) async {
+  try {
+    final p = await Fluttertoast.showToast(
+            msg: content,
+            gravity: gravity,
+            fontSize: fontSize,
+            toastLength: length) ??
+        false;
+    return p;
+  } catch (e) {
+    log(e);
+    return false;
+  }
+}
+
+Future<Uint8List> getBytesFromAsset(String path,
+    {int? width, ImageByteFormat? format}) async {
+  try {
+    final data = await rootBundle.load(path);
+    final codec = await instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width);
+    final fi = await codec.getNextFrame();
+    final bd = await fi.image.toByteData(format: format ?? ImageByteFormat.png);
+    return bd!.buffer.asUint8List();
+  } catch (e) {
+    log(e);
+    return Uint8List.fromList([]);
+  }
+}
+
+Future<List<String>> getLocalStorageKeys() async {
+  final prefs = await sharedPrefs;
+  return prefs.getKeys().toList();
+}
 
 class Helper extends ChangeNotifier {
   late BuildContext buildContext;
-  S get loc => S.of(buildContext);
   ThemeData get theme => Theme.of(buildContext);
   OverlayState? get ol => Overlay.of(buildContext);
-  NavigatorState get nav => Navigator.of(buildContext);
+  ModalRoute<Object?>? get route => ModalRoute.of(buildContext);
+  S get loc => S.maybeOf(buildContext) ?? S.of(buildContext);
+  NavigatorState get nav =>
+      Navigator.maybeOf(buildContext) ?? Navigator.of(buildContext);
   MediaQueryData get dimensions =>
       MediaQuery.maybeOf(buildContext) ?? MediaQuery.of(buildContext);
-  ModalRoute<Object?>? get route => ModalRoute.of(buildContext);
   AnimatedListState get als =>
       AnimatedList.maybeOf(buildContext) ?? AnimatedList.of(buildContext);
   ScaffoldState get sct =>
@@ -750,13 +709,13 @@ class Helper extends ChangeNotifier {
 
   Future<bool> onWillPop() async {
     DateTime now = DateTime.now();
-    if (currentBackPressTime != null &&
-        now.difference(currentBackPressTime!) > const Duration(seconds: 2)) {
+    if (now.difference(currentBackPressTime ?? now) >
+        const Duration(seconds: 2)) {
       currentBackPressTime = now;
       final p = await Fluttertoast.showToast(msg: loc.tapAgainToLeave) ?? true;
       return Future.value(!p);
     }
-    SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+    await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
     return Future.value(true);
   }
 
@@ -840,23 +799,25 @@ class Helper extends ChangeNotifier {
   }
 
   void getConnectStatus({VoidCallback? vcb}) async {
-    final connectivityResult = await conn.checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      final f1 = await revealDialogBox([
-        'Try Again'
-      ], [
-        () {
-          goBack(result: connectivityResult == ConnectivityResult.none);
-          getConnectStatus();
-        }
-      ],
-          action: 'You are Off-Line!!!!!',
-          type: AlertType.cupertino,
-          dismissive: false);
-      if (!f1) goBack();
-    } else {
-      // I am connected to a mobile network.
-      vcb?.call();
+    final result = await conn.checkConnectivity();
+    switch (result) {
+      case ConnectivityResult.none:
+        final f1 = await revealDialogBox([
+          'Try Again'
+        ], [
+          () {
+            goBack(result: result == ConnectivityResult.none);
+            getConnectStatus();
+          }
+        ],
+            action: 'You are Off-Line!!!!!',
+            type: AlertType.cupertino,
+            dismissive: false);
+        if (!f1) goBack();
+        break;
+      default:
+        vcb?.call();
+        break;
     }
   }
 

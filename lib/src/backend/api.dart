@@ -1,15 +1,109 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:async';
 import 'dart:convert';
-import 'package:http/http.dart';
+import 'package:grid_test/src/models/base.dart';
+
+import '../models/city.dart';
+import '../models/county.dart';
+import '../models/item.dart';
+import '../models/todo.dart';
+import '../models/product.dart';
 import '../helpers/helper.dart';
-import '../models/some_item.dart';
-import 'package:flutter/foundation.dart';
+import 'package:http/http.dart';
 import 'package:global_configuration/global_configuration.dart';
 
 GlobalConfiguration? gc;
 final httpClient = HttpClient();
-ValueNotifier<List<int>?> bytes = ValueNotifier(null);
+StreamController<List<Product>> productsController =
+    StreamController<List<Product>>.broadcast(onListen: () {
+  log('Waiting to listen for Product List.....');
+  log('Started listening to Product List');
+}, onCancel: () {
+  log('Stopped listening to Product List');
+});
+
+StreamController<Product> productController =
+    StreamController<Product>.broadcast(onListen: () {
+  log('Waiting to listen for Product.....');
+  log('Started listening to Product');
+}, onCancel: () {
+  log('Stopped listening to Product');
+});
+
+StreamController<List<Item>> itemsController =
+    StreamController<List<Item>>.broadcast(onListen: () {
+  log('Waiting to listen for Item List.....');
+  log('Started listening to Item List');
+}, onCancel: () {
+  log('Stopped listening to Item List');
+});
+
+void getProducts(int seconds) async {
+  try {
+    await Future.delayed(Duration(seconds: seconds), () async {
+      final cl = Client();
+      final res = await cl.get(
+          Uri.tryParse('https://api.escuelajs.co/api/v1/products') ?? Uri());
+      cl.close();
+      final list = res.statusCode == 200
+          ? List<Map<String, dynamic>>.from(json.decode(res.body) as List)
+              .map<Product>(Product.fromMap)
+              .toList()
+          : <Product>[];
+      log('------------------------');
+      log(list.length);
+      log('________________________');
+      list.isEmpty ? doNothing() : productsController.add(list);
+    });
+  } catch (e) {
+    log(e);
+  }
+}
+
+void getProductData(int seconds, int productID) async {
+  try {
+    await Future.delayed(Duration(seconds: seconds), () async {
+      final client = Client();
+      final response = await client.get(
+          Uri.tryParse('https://api.escuelajs.co/api/v1/products/$productID') ??
+              Uri());
+      client.close();
+      final product = response.statusCode == 200
+          ? Product.fromMap(json.decode(response.body) as Map<String, dynamic>)
+          : Product.emptyProduct;
+      product.isEmpty ? doNothing() : productController.add(product);
+    });
+  } catch (e) {
+    log(e);
+  }
+}
+
+void obtainItems(int seconds) async {
+  try {
+    await Future.delayed(Duration(seconds: seconds), () async {
+      final client = Client();
+      final url =
+          Uri.tryParse('https://api.storerestapi.com/products') ?? Uri();
+      final response = await client.get(url);
+      client.close();
+      log(response.statusCode);
+      log(response.body);
+      final jstr = json.decode(response.body) as Map<String, dynamic>;
+      final lst = response.statusCode == 200
+          ? List<Map<String, dynamic>>.from(jstr['data'] as List)
+              .map<Item>(Item.fromMap)
+              .toList()
+          : <Item>[];
+      log('------------------------');
+      log(lst.length);
+      log('________________________');
+      lst.isEmpty ? doNothing() : itemsController.add(lst);
+    });
+  } catch (e) {
+    log(e);
+  }
+}
 
 Iterable<int> getNumbers(int number) sync* {
   log('generator started');
@@ -37,103 +131,65 @@ Stream<int> getValues(int seconds) async* {
   }
 }
 
-Stream<List<SomeItem>> receiveData(Duration duration) async* {
-  final client = Client();
+Stream<List<Todo>> receiveData(Duration duration) async* {
   try {
     while (true) {
       await Future.delayed(duration);
+      final client = Client();
       final url =
           Uri.tryParse('https://jsonplaceholder.typicode.com/todos') ?? Uri();
       final response = await client.get(url);
-      // client.close();
+      client.close();
       yield response.statusCode == 200
-          ? List<Map<String, dynamic>>.from(json.decode(response.body))
-              .map<SomeItem>(SomeItem.fromMap)
+          ? List<Map<String, dynamic>>.from(json.decode(response.body) as List)
+              .map<Todo>(Todo.fromMap)
               .toList()
-          : <SomeItem>[];
+          : <Todo>[];
     }
   } catch (e) {
     log(e);
-    client.close();
-    yield <SomeItem>[];
+    yield <Todo>[];
   }
 }
 
-Future<List<SomeItem>> obtainData() async {
-  final client = Client();
+Future<List<County>> obtainStates() async {
   try {
-    final url =
-        Uri.tryParse('https://jsonplaceholder.typicode.com/todos') ?? Uri();
-    final response = await client.get(url);
-    log(response.statusCode);
-    log(response.body);
-    return response.statusCode == 200
-        ? List<Map<String, dynamic>>.from(json.decode(response.body))
-            .map<SomeItem>(SomeItem.fromMap)
+    final request = await httpClient.getUrl(
+        Uri.tryParse('https://apptest.pw/bookMygold/User/States.php') ?? Uri());
+    final response = await request.close();
+    final resStr = await response.transform(utf8.decoder).join();
+    final base = Base.fromMap(json.decode(resStr) as Map<String, dynamic>);
+    log(resStr);
+    return response.statusCode == 200 && base.status == 200
+        ? List<Map<String, dynamic>>.from(base.data)
+            .map<County>(County.fromMap)
             .toList()
-        : <SomeItem>[];
+        : <County>[];
   } catch (e) {
     log(e);
-    client.close();
-    rethrow;
+    return <County>[];
   }
 }
 
-Future<String> downloadFile(String url, String fileName, String dir) async {
-  HttpClient httpClient = HttpClient();
-  File file;
-  String filePath = '';
-  String myUrl = '';
+Future<List<City>> getCities(int stateID) async {
   try {
-    myUrl = '$url/$fileName';
-    final request = await httpClient.getUrl(Uri.parse(myUrl));
-    final response = await request.close();
-    if (response.statusCode == 200) {
-      final bytes = await consolidateHttpClientResponseBytes(response);
-      filePath = '$dir/$fileName';
-      file = File(filePath);
-      final byteFile = await file.writeAsBytes(bytes);
-      log(byteFile.path);
-    } else {
-      filePath = 'Error code: ${response.statusCode}';
-    }
-  } catch (e) {
-    log(e);
-    filePath = 'Can not fetch url';
-  }
-
-  return filePath;
-}
-
-Future<Map<String, dynamic>> getMap() async {
-  try {
-    final request = await httpClient
-        .getUrl(Uri.tryParse('http://127.0.0.1:8000/') ?? Uri());
-    final response = await request.close();
-    final resStr = await response.transform(utf8.decoder).join();
+    final clt = Client();
+    log(stateID);
+    final url = Uri.tryParse(
+            'https://apptest.pw/bookMygold/User/Cities.php?state=$stateID') ??
+        Uri();
+    final req = await httpClient.getUrl(url);
+    final res = await req.close();
+    final resStr = await res.transform(utf8.decoder).join();
     log(resStr);
-    return response.statusCode == 200
-        ? json.decode(resStr) as Map<String, dynamic>
-        : <String, dynamic>{};
+    final base = Base.fromMap(json.decode(resStr) as Map<String, dynamic>);
+    return res.statusCode == 200 && base.status == 200
+        ? List<Map<String, dynamic>>.from(base.data)
+            .map<City>(City.fromMap)
+            .toList()
+        : <City>[];
   } catch (e) {
     log(e);
-    return <String, dynamic>{};
-  }
-}
-
-Future<Map<String, dynamic>> obtainMap() async {
-  try {
-    final request = await httpClient
-        .postUrl(Uri.tryParse('http://127.0.0.1:8000/values') ?? Uri());
-    request.write(jsonEncode({'limit': 50}));
-    final response = await request.close();
-    final resStr = await response.transform(utf8.decoder).join();
-    log(resStr);
-    return response.statusCode == 200
-        ? json.decode(resStr) as Map<String, dynamic>
-        : <String, dynamic>{};
-  } catch (e) {
-    log(e);
-    return <String, dynamic>{};
+    return <City>[];
   }
 }

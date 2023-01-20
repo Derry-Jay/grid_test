@@ -1,12 +1,12 @@
-import 'package:grid_test/src/helpers/helper.dart';
-import 'package:grid_test/src/widgets/empty_widget.dart';
-
-import 'circular_loader.dart';
+import 'dart:async';
+import 'empty_widget.dart';
+import '../models/item.dart';
 import '../backend/api.dart';
-import '../models/some_item.dart';
+import 'circular_loader.dart';
+import 'grid_item_widget.dart';
+import '../helpers/helper.dart';
 import '../screens/grid_page.dart';
 import 'package:flutter/material.dart';
-import '../widgets/grid_item_widget.dart';
 
 class GridWidget extends StatefulWidget {
   const GridWidget({Key? key}) : super(key: key);
@@ -19,41 +19,67 @@ class GridWidget extends StatefulWidget {
 }
 
 class GridWidgetState extends State<GridWidget> {
+  StreamSubscription<List<Item>>? isc;
   GridPageState? get gps => GridWidget.of(context);
-  Widget gridBuilder(
-      BuildContext context, AsyncSnapshot<List<SomeItem>> items) {
+  void customDispose() async {
+    try {
+      log('Stopping listening for Item List.....');
+      await isc?.cancel();
+      log('Stopped listening to Item List');
+    } catch (e) {
+      log(e);
+    }
+  }
+
+  Widget gridBuilder(BuildContext context, AsyncSnapshot<List<Item>> items) {
+    final hp = Helper.of(context);
+    // final gp = GridWidget.of(context);
+
+    bool filter(Item element) {
+      return element.category.itemCategoryID == gps?.selectedID;
+    }
+
     Widget itemBuilder(BuildContext context, int index) {
       try {
+        final lst = gps?.selectedID == null
+            ? items.data
+            : items.data?.where(filter).toSet().toList();
         return GridItemWidget(
-            item: items.data?[index] ?? SomeItem.emptyItem, index: index);
+            item: lst?[index] ?? Item.emptyItem, index: index);
       } catch (e) {
         log(e);
         return const EmptyWidget();
       }
     }
 
-    if (gps?.flags.isEmpty ?? false) {
-      gps?.flags = List<bool>.filled(items.data?.length ?? 0, false);
-    }
-
-    // log(largestFactorUnderTen(200));
-
     try {
-      return items.hasData &&
+      switch (items.connectionState) {
+        case ConnectionState.active:
+          if (items.hasData &&
               !items.hasError &&
-              (items.data?.isNotEmpty ?? false)
-          ? GridView.builder(
-              itemCount: items.data?.length,
-              itemBuilder: itemBuilder,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount:
-                      largestFactorUnderTen(items.data?.length ?? 2) < 2
-                          ? 2
-                          : largestFactorUnderTen(items.data?.length ?? 2)))
-          : (!items.hasData || items.hasError
-              ? const CircularLoader(
-                  color: Colors.blue, duration: Duration(seconds: 5))
-              : const Text('Nothing Found'));
+              (items.data?.isNotEmpty ?? false)) {
+            final lst = gps?.selectedID == null
+                ? items.data
+                : items.data?.where(filter).toSet();
+            return GridView.builder(
+                itemCount: lst?.length,
+                itemBuilder: itemBuilder,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    mainAxisSpacing: hp.height / 32,
+                    crossAxisSpacing: hp.width / 16,
+                    childAspectRatio: (hp.width * 1.28) / hp.height,
+                    crossAxisCount: 2));
+          } else if (items.hasError) {
+            return SelectableText(items.error?.toString() ?? '');
+          } else {
+            return const EmptyWidget();
+          }
+        case ConnectionState.none:
+          return const EmptyWidget();
+        default:
+          return const CircularLoader(
+              color: Colors.pinkAccent, duration: Duration(seconds: 5));
+      }
     } catch (e) {
       log(e);
       return const EmptyWidget();
@@ -62,7 +88,35 @@ class GridWidgetState extends State<GridWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<SomeItem>>(
-        builder: gridBuilder, future: obtainData());
+    return StreamBuilder<List<Item>>(
+        builder: gridBuilder, stream: itemsController.stream);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    isc = itemsController.stream.listen((event) {
+      log('++++++++++++++++');
+      log(event.length);
+      obtainItems(6);
+      log('================');
+    }, onDone: () {
+      log('done');
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    obtainItems(6);
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    customDispose();
+    super.dispose();
   }
 }

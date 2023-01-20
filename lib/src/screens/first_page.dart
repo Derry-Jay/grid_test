@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
-
 import '../backend/api.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import '../widgets/todo_list_widget.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({Key? key}) : super(key: key);
@@ -27,20 +27,6 @@ class FirstPageState extends State<FirstPage> {
     return Text(value.data.toString());
   }
 
-  Widget mapItem(int i) {
-    return Container(
-      width: hp.width / i,
-      height: hp.height / (i * 2),
-      color: hp.theme.dividerColor,
-      // padding: const EdgeInsets.only(top: 20, bottom: 15, left: 25, right: 20),
-      child: Center(
-        child: Text(i.toString(),
-            style:
-                TextStyle(color: hp.theme.toggleableActiveColor, fontSize: 20)),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     IconData idt = Icons.flip;
@@ -49,7 +35,7 @@ class FirstPageState extends State<FirstPage> {
         idt = Icons.flip_camera_android;
         break;
       case TargetPlatform.iOS:
-        idt = Icons.flip_camera_android;
+        idt = Icons.flip_camera_ios;
         break;
       default:
         break;
@@ -78,22 +64,6 @@ class FirstPageState extends State<FirstPage> {
         //         fit: BoxFit.scaleDown,
         //         height: 32,
         //       ))
-        //   // ,TextFormField(
-        //   //     controller: con.nc,
-        //   //     validator: hp.nameValidator,
-        //   //     decoration: InputDecoration(
-        //   //         contentPadding: EdgeInsets.symmetric(
-        //   //             vertical: hp.height / 100, horizontal: hp.width / 40),
-        //   //         border: const OutlineInputBorder(),
-        //   //         hintText: hp.loc.full_name)),
-        //   // TextFormField(
-        //   //     controller: con.dc,
-        //   //     validator: hp.descriptionValidator,
-        //   //     decoration: InputDecoration(
-        //   //         contentPadding: EdgeInsets.symmetric(
-        //   //             vertical: hp.height / 100, horizontal: hp.width / 40),
-        //   //         border: const OutlineInputBorder(),
-        //   //         hintText: hp.loc.description))
         // ]),
         // title: Image.asset('assets/images/logo.jpg',
         //     fit: BoxFit.fill, height: hp.height / 20),
@@ -139,11 +109,7 @@ class FirstPageState extends State<FirstPage> {
                           builder: valueBuilder,
                           stream: getValues(2),
                           initialData: 0)),
-                  Expanded(
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children:
-                              getNumbers(3).map<Widget>(mapItem).toList()))
+                  // const Expanded(flex: 2, child: SomeItemListWidget())
                 ],
               ))),
       bottomNavigationBar: SizedBox(width: hp.width, height: 50),
