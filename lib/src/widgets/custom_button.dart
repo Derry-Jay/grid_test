@@ -33,10 +33,21 @@ class CustomButton extends StatelessWidget {
         shape: MaterialStateProperty.all<OutlinedBorder?>(shape));
     switch (type) {
       case ButtonType.raised:
-        return ElevatedButton(style: style, onPressed: onPressed, child: child);
+        return ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                shape: shape,
+                padding: padding,
+                backgroundColor: buttonColor,
+                foregroundColor: labelColor),
+            onPressed: onPressed,
+            child: child);
       case ButtonType.border:
         return OutlinedButton(
-            style: style,
+            style: OutlinedButton.styleFrom(
+                shape: shape,
+                side: shape?.side,
+                backgroundColor: buttonColor,
+                foregroundColor: labelColor),
             onPressed: onPressed,
             child: child ?? const EmptyWidget());
       case ButtonType.text:

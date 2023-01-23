@@ -67,7 +67,7 @@ class MyApp extends StatelessWidget {
             // Notice that the counter didn't reset back to zero; the application
             // is not restarted.
             hintColor: Colors.grey,
-            primarySwatch: Colors.blue,
+            primarySwatch: Colors.teal,
             secondaryHeaderColor: Colors.black,
             scaffoldBackgroundColor: Colors.white),
         localizationsDelegates: const [
