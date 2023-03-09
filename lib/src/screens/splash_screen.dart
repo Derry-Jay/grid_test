@@ -11,32 +11,32 @@ class SplashScreen extends StatefulWidget {
 }
 
 class SplashScreenState extends State<SplashScreen> {
-  List<Item> items = <Item>[
-    Item('Lead', '${assetImagePath}Frame.png'),
-    Item('Followup', '${assetImagePath}Frame.png'),
-    Item('Enquiries', '${assetImagePath}Frame.png'),
-    Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
-    Item('Lead', '${assetImagePath}Frame.png'),
-    Item('Followup', '${assetImagePath}Frame.png'),
-    Item('Enquiries', '${assetImagePath}Frame.png'),
-    Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
-    Item('Lead', '${assetImagePath}Frame.png'),
-    Item('Followup', '${assetImagePath}Frame.png'),
-    Item('Enquiries', '${assetImagePath}Frame.png'),
-    Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
-    Item('Lead', '${assetImagePath}Frame.png'),
-    Item('Followup', '${assetImagePath}Frame.png'),
-    Item('Enquiries', '${assetImagePath}Frame.png'),
-    Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
-    Item('Lead', '${assetImagePath}Frame.png'),
-    Item('Followup', '${assetImagePath}Frame.png'),
-    Item('Enquiries', '${assetImagePath}Frame.png'),
-    Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
-    Item('Lead', '${assetImagePath}Frame.png'),
-    Item('Followup', '${assetImagePath}Frame.png'),
-    Item('Enquiries', '${assetImagePath}Frame.png'),
-    Item('Enquiry Ticket', '${assetImagePath}Frame.png')
-  ];
+  // List<Item> items = <Item>[
+  //   Item('Lead', '${assetImagePath}Frame.png'),
+  //   Item('Followup', '${assetImagePath}Frame.png'),
+  //   Item('Enquiries', '${assetImagePath}Frame.png'),
+  //   Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
+  //   Item('Lead', '${assetImagePath}Frame.png'),
+  //   Item('Followup', '${assetImagePath}Frame.png'),
+  //   Item('Enquiries', '${assetImagePath}Frame.png'),
+  //   Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
+  //   Item('Lead', '${assetImagePath}Frame.png'),
+  //   Item('Followup', '${assetImagePath}Frame.png'),
+  //   Item('Enquiries', '${assetImagePath}Frame.png'),
+  //   Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
+  //   Item('Lead', '${assetImagePath}Frame.png'),
+  //   Item('Followup', '${assetImagePath}Frame.png'),
+  //   Item('Enquiries', '${assetImagePath}Frame.png'),
+  //   Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
+  //   Item('Lead', '${assetImagePath}Frame.png'),
+  //   Item('Followup', '${assetImagePath}Frame.png'),
+  //   Item('Enquiries', '${assetImagePath}Frame.png'),
+  //   Item('Enquiry Ticket', '${assetImagePath}Frame.png'),
+  //   Item('Lead', '${assetImagePath}Frame.png'),
+  //   Item('Followup', '${assetImagePath}Frame.png'),
+  //   Item('Enquiries', '${assetImagePath}Frame.png'),
+  //   Item('Enquiry Ticket', '${assetImagePath}Frame.png')
+  // ];
   Helper get hp => Helper.of(context);
   @override
   Widget build(BuildContext context) {
@@ -67,7 +67,7 @@ class SplashScreenState extends State<SplashScreen> {
               borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(hp.radius / 25))),
         ),
-        ItemGridWidget(items: items)
+        // ItemGridWidget(items: items)
       ]),
     );
   }

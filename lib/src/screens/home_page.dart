@@ -1,4 +1,6 @@
-import '../backend/api.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:grid_test/src/models/route_argument.dart';
+
 import '../models/cart.dart';
 import '../helpers/helper.dart';
 import 'package:flutter/material.dart';
@@ -26,9 +28,10 @@ class MyHomePageState extends State<MyHomePage> {
   Map<String, dynamic>? val, map;
   Helper get hp => Helper.of(context);
 
-  void setData() async {
+  void setData() //async
+  {
     // val = await getMap();
-    map = await obtainMap();
+    // map = await obtainMap();
     mounted ? setState(() {}) : log('unmounted');
   }
 
@@ -39,12 +42,14 @@ class MyHomePageState extends State<MyHomePage> {
               // Here we take the value from the MyHomePage object that was created by
               // the App.build method, and use it to set our appbar title.
               title: SelectableText(hp.loc.description, onTap: () async {
-                hp.goTo('/qr');
+                // hp.goTo('/qr');
+                // hp.goTo('/products');
               }),
               actions: [
                 IconButton(
                     onPressed: () async {
-                      hp.goTo('/first');
+                      hp.goTo('/first',
+                          args: RouteArgument(type: TransitionType.decorative));
                     },
                     icon: const Icon(Icons.arrow_forward_ios))
               ]),
@@ -68,31 +73,27 @@ class MyHomePageState extends State<MyHomePage> {
               // horizontal).
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                GestureDetector(
-                  child: const SelectableText(
-                    'You have pushed the button this many times:',
-                  ),
-                  onTap: () async {
-                    hp.goTo('/map');
-                  },
-                ),
+                SelectableText('You have pushed the button this many times:',
+                    onTap: () async {
+                  hp.goTo('/map');
+                }),
                 SelectableText('${model.counter}',
                     style: hp.textTheme.headline4, onTap: () async {
                   hp.goTo('/home');
                 }),
                 ElevatedButton(
-                    onPressed: () async {
-                      widget.model.changeDirection();
-                    },
+                    onPressed: widget.model.changeDirection,
                     child: Text(hp.loc.details)),
                 SelectableText(hp.loc.you_must_signin_to_access_to_this_section,
                     onTap: () async {
-                  log(val);
-                  log(map);
+                  hp.goTo('/items');
                 }),
                 ElevatedButton(
                     onPressed: () async {
-                      hp.goTo('/ar');
+                      log('Haversine');
+                      log(haversineDistance(LatLng(12.827313, 80.1652452),
+                          LatLng(12.9809919, 80.2096608)));
+                      // hp.goTo('/states');
                     },
                     child: const Text('ARKit'))
               ],
@@ -106,12 +107,12 @@ class MyHomePageState extends State<MyHomePage> {
         );
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    setData();
-  }
+  // @override
+  // void initState() {
+  //   // TODO: implement initState
+  //   super.initState();
+  //   setData();
+  // }
 
   @override
   Widget build(BuildContext context) {

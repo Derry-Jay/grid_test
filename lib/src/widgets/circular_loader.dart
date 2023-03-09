@@ -37,9 +37,7 @@ class CircularLoaderState extends State<CircularLoader>
   }
 
   void moveForwardIfMounted() async {
-    if (mounted && animationController != null) {
-      await animationController?.forward();
-    }
+    mounted ? await animationController?.forward() : doNothing();
   }
 
   void getData() {
@@ -56,15 +54,47 @@ class CircularLoaderState extends State<CircularLoader>
   }
 
   void listenAnimationStatus(AnimationStatus status) {
-    if ((status == AnimationStatus.dismissed ||
-            status == AnimationStatus.completed) &&
-        mounted) {
-      dispose();
+    switch (status) {
+      case AnimationStatus.completed:
+      case AnimationStatus.dismissed:
+        dispose();
+        break;
+      default:
+        doNothing();
+        break;
     }
   }
 
   void assignState() async {
     await Future.delayed(Duration.zero, getData);
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    moveForwardIfMounted();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    assignState();
+  }
+
+  @override
+  void dispose() {
+    log(animationController);
+    if (mounted) {
+      animationController?.dispose();
+    }
+    // tm?.cancel();
+    log(animation);
+    if (mounted) {
+      animation?.removeListener(refreshIfMounted);
+      animation?.removeStatusListener(listenAnimationStatus);
+    }
+    super.dispose();
   }
 
   @override
@@ -259,33 +289,5 @@ class CircularLoaderState extends State<CircularLoader>
             heightFactor: widget.heightFactor,
             widthFactor: widget.widthFactor,
             child: lc));
-  }
-
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    super.didChangeDependencies();
-    moveForwardIfMounted();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    assignState();
-  }
-
-  @override
-  void dispose() {
-    log(animationController);
-    if (animationController != null && mounted) {
-      animationController?.dispose();
-    }
-    // if (tm != null) tm?.cancel();
-    log(animation);
-    if (animation != null && mounted) {
-      animation?.removeListener(refreshIfMounted);
-      animation?.removeStatusListener(listenAnimationStatus);
-    }
-    super.dispose();
   }
 }

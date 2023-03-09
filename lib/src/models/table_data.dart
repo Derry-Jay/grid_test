@@ -59,7 +59,7 @@ class TableData extends DataTableSource {
       SchemaCell mapCell(String e) {
         void onTapCell() async {
           if (val[e].toString().contains('http')) {
-            final p = await launch(val[e].toString());
+            final p = await launchUrl(Uri.tryParse(val[e].toString()) ?? Uri());
             if (p) {
               log(val[e]);
             }

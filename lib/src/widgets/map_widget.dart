@@ -10,10 +10,10 @@ class MapWidget extends StatelessWidget {
   const MapWidget({Key? key}) : super(key: key);
 
   void placedCoordinates(GoogleMapController mapController) async {
-    final currentposition = await Geolocator.getCurrentPosition();
-    final point = LatLng(currentposition.latitude, currentposition.longitude);
+    final currentPosition = await Geolocator.getCurrentPosition();
+    final point = LatLng(currentPosition.latitude, currentPosition.longitude);
     await mapController.animateCamera(CameraUpdate.newLatLng(point));
-    log(currentposition);
+    log(currentPosition);
     log('currentPosition');
     log(point);
   }
@@ -30,6 +30,7 @@ class MapWidget extends StatelessWidget {
 
   void cameraMovement(CameraPosition position) async {
     log(position.target);
+    await mapCon?.animateCamera(CameraUpdate.newCameraPosition(position));
   }
 
   Widget mapBuilder(BuildContext context, AsyncSnapshot<LocationData> region) {
@@ -38,6 +39,7 @@ class MapWidget extends StatelessWidget {
     try {
       switch (region.connectionState) {
         case ConnectionState.done:
+        case ConnectionState.active:
           return region.hasData && !region.hasError
               ? GoogleMap(
                   trafficEnabled: true,

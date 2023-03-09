@@ -9,9 +9,7 @@ class ItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: implement build
     final hp = Helper.of(context);
-    // return Text(item.content);
     return Column(
-      // crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
             height: hp.height / 6.4,
@@ -29,7 +27,7 @@ class ItemWidget extends StatelessWidget {
                         BorderRadius.all(Radius.circular(hp.radius / 100)),
                     image: DecorationImage(
                         image: AssetImage(item.image), fit: BoxFit.contain)))),
-        Text(item.content)
+        Text(item.description)
       ],
     );
   }

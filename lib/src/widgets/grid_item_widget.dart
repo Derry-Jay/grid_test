@@ -1,12 +1,12 @@
 import 'grid_widget.dart';
 import 'empty_widget.dart';
+import '../models/item.dart';
 import '../helpers/helper.dart';
-import '../models/some_item.dart';
 import 'package:flutter/material.dart';
 
 class GridItemWidget extends StatefulWidget {
   final int index;
-  final SomeItem item;
+  final Item item;
   const GridItemWidget({required this.item, required this.index, Key? key})
       : super(key: key);
 
@@ -25,48 +25,34 @@ class GridItemWidgetState extends State<GridItemWidget> {
     // TODO: implement build
     try {
       return GestureDetector(
-          child: Card(
-              shape: RoundedRectangleBorder(
-                  side: BorderSide(
-                      color: (gws?.gps?.flags[widget.index] ?? false)
-                          ? Colors.pink
-                          : Colors.transparent),
-                  borderRadius:
-                      BorderRadius.all(Radius.circular(hp.radius / 40))),
-              child: Column(
-                children: [
-                  Row(children: [
-                    const SizedBox(),
-                    Container(
-                        decoration: BoxDecoration(
-                            color: (gws?.gps?.flags[widget.index] ?? false)
-                                ? Colors.pink
-                                : Colors.white,
-                            borderRadius: BorderRadius.only(
-                                bottomRight: Radius.circular(hp.radius / 50),
-                                topLeft: Radius.circular(hp.radius / 40))),
-                        child: const Icon(Icons.check, color: Colors.white))
-                  ]),
-                  Expanded(
-                      flex: 1,
-                      child: Text(widget.item.itemID.toString(),
-                          style: const TextStyle(fontWeight: FontWeight.w700))),
-                  Expanded(
-                      flex: 2,
-                      child: Text(widget.item.title,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700, color: Colors.grey)))
-                ],
-              )),
           onTap: () {
-            // gps!.setState(() {
-            //   if (gps!.flags.contains(true)) {
-            //     gps!.flags[gps!.flags.indexOf(true)] = false;
+            // gws?.setState(() {
+            //   if (gws?.gps?.flags.contains(true) ?? false) {
+            //     gws?.gps?.flags[gws?.gps?.flags.indexOf(true) ?? widget.index] =
+            //         false;
             //   }
-            //   gps!.flags[widget.index] = true;
+            //   gws?.gps?.flags[widget.index] = true;
             // });
-            // log(gps!.flags);
-          });
+            // log(gws?.gps?.flags);
+          },
+          child: GridTile(
+              footer: GridTileBar(
+                  backgroundColor: Colors.yellow,
+                  title: Text(widget.item.title, style: hp.textTheme.headline6),
+                  subtitle: Text('\u{20B9}${widget.item.price}',
+                      style: const TextStyle(color: Colors.black)),
+                  trailing:
+                      const Icon(Icons.shopping_cart, color: Colors.black)),
+              child: widget.item.image.isEmpty
+                  ? Container(
+                      color: Colors.pinkAccent,
+                      child: Center(
+                          child: Icon(Icons.image,
+                              color: Colors.pinkAccent.shade100)))
+                  : Image.network(widget.item.image,
+                      fit: BoxFit.cover,
+                      errorBuilder: errorBuilder,
+                      loadingBuilder: getNetworkImageLoader)));
     } catch (e) {
       log(e);
       return const EmptyWidget();

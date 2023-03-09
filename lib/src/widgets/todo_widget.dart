@@ -1,17 +1,17 @@
+import '../models/todo.dart';
 import '../helpers/helper.dart';
-import '../models/some_item.dart';
 import 'package:flutter/material.dart';
 
-class SomeItemWidget extends StatefulWidget {
-  final SomeItem item;
+class TodoWidget extends StatefulWidget {
+  final Todo item;
   final int index;
-  const SomeItemWidget({Key? key, required this.item, required this.index})
+  const TodoWidget({Key? key, required this.item, required this.index})
       : super(key: key);
   @override
-  SomeItemWidgetState createState() => SomeItemWidgetState();
+  TodoWidgetState createState() => TodoWidgetState();
 }
 
-class SomeItemWidgetState extends State<SomeItemWidget> {
+class TodoWidgetState extends State<TodoWidget> {
   Helper get hp => Helper.of(context);
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,6 @@ class SomeItemWidgetState extends State<SomeItemWidget> {
                 width: hp.width,
                 height: hp.height / 8,
                 child: Column(
-                    // mainAxisAlignment:,
                     children: [
                       Row(children: [
                         Container(
@@ -53,7 +52,7 @@ class SomeItemWidgetState extends State<SomeItemWidget> {
                                   fontWeight: FontWeight.w700))),
                       Expanded(
                           flex: 2,
-                          child: Text(widget.item.itemID.toString(),
+                          child: Text(widget.item.todoID.toString(),
                               style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Colors.grey)))
